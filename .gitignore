@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+*.egg-info/
+build/
+dist/
+
+# All engagement output ignored by default (client confidentiality).
+reports/*
+# Juice Shop dry-run is a public OWASP target — track engagement.yaml + finding drafts
+# so harness state survives corruption. JSONL stays ignored (raw request/response bytes;
+# scrubber bug 2026-11-18: Authorization/Cookie values leak past [REDACTED] prefix).
+!reports/2026-11-18-*.md
+!reports/2026-11-19-*.md
+!reports/juice-shop/
+reports/juice-shop/*
+!reports/juice-shop/engagement.yaml
+!reports/juice-shop/screenshots/
+!reports/juice-shop/screenshots/**

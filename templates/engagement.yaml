@@ -1,0 +1,83 @@
+# engagement.yaml — single source of truth for one pentest engagement.
+# Lives at reports/<engagement>/engagement.yaml. Human-editable.
+# Every phase skill reads it on start and writes back on checkpoint.
+
+engagement: acme-webapp          # slug, matches reports/<slug>/ dir
+client: ACME Corp
+scope:
+  hosts:
+    - app.acme.test
+    - api.acme.test
+  notes: |
+    Staging only. No prod. No DoS.
+window:
+  start: 2026-11-14
+  end:   2026-11-21
+
+# ---------------------------------------------------------------------------
+# Auth state — captured once, reused by later phases.
+# ---------------------------------------------------------------------------
+auth:
+  status: pending                # pending | done | skipped | blocked
+  method: null                   # session-cookie | bearer | basic | none
+  captured_at: null              # ISO8601 UTC
+  cookie_jar: null               # path under reports/<slug>/ if applicable
+  notes: null
+
+# ---------------------------------------------------------------------------
+# Phases — status drives the resume logic. Order is the default execution
+# order; a phase can be skipped if it does not apply.
+# ---------------------------------------------------------------------------
+phases:
+  recon:
+    status: pending              # pending | in_progress | done | skipped | blocked
+    checkpoint: null             # ISO8601 UTC, written by advance_phase
+    artifacts: []                # file paths under reports/<slug>/
+    cursor: null                 # free-form: "42/210 urls", "last=/api/v1/orders"
+    notes: null
+  auth:                          # /pentest-auth — checks: rate_limit, user_enum, session, jwt, reset_mfa
+    status: pending
+    checkpoint: null
+    artifacts: []
+    cursor: null
+    notes: null
+  crawl:
+    status: pending
+    checkpoint: null
+    artifacts: []
+    cursor: null
+    notes: null
+  baseline_scan:
+    status: pending
+    checkpoint: null
+    artifacts: []
+    notes: null
+  verify:
+    status: pending
+    checkpoint: null
+    notes: null
+  report:
+    status: pending
+    checkpoint: null
+    artifacts: []
+    notes: null
+
+# ---------------------------------------------------------------------------
+# Verify queue — items surfaced by recon/crawl/baseline that need targeted
+# follow-up (repeater, intruder, manual). Drained during the `verify` phase.
+# ---------------------------------------------------------------------------
+verify_queue:
+  # - id: vq-001
+  #   type: sqli                 # sqli | xss | idor | ssrf | auth | ...
+  #   url: https://api.acme.test/v1/search
+  #   param: q
+  #   severity_hint: high
+  #   detected_by: baseline_scan # recon | crawl | baseline_scan | manual
+  #   status: pending            # pending | in_progress | confirmed | false_positive | skipped
+  #   finding: null              # filename once a finding is written
+
+# ---------------------------------------------------------------------------
+# Findings written — mirrors files on disk; keeps a flat index for resume.
+# ---------------------------------------------------------------------------
+findings_written: []
+#  - 2026-11-14-high-sqli-search.md

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "burp-stdio": {
+      "command": "burp-stdio",
+      "env": {
+        "BURP_MCP_HTTP": "http://127.0.0.1:9876/mcp"
+      }
+    },
+    "burp-direct": {
+      "type": "sse",
+      "url": "http://127.0.0.1:9876"
+    }
+  }
+}
