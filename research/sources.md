@@ -307,3 +307,11 @@ partial listing) are both superseded. Settle at **26** everywhere.
   - Label: verified
 - Fact: Our `tools/diff_fuzz.py` reimplements BPS's core idea (baseline → probe → signature-diff → escape-partner confirm) without the `IScannerCheck` surface so it runs standalone under Community.
   - Label: in-repo implementation, see `tools/diff_fuzz.py` header
+
+## 2026-11-21 — Pentest phase models
+- Fact: PTES (Penetration Testing Execution Standard) defines 7 phases: Pre-engagement, Intelligence Gathering, Threat Modeling, Vulnerability Analysis, Exploitation, Post-Exploitation, Reporting.
+  - Source: http://www.pentest-standard.org/index.php/Main_Page
+  - Label: verified (public standard)
+- Fact: OWASP WSTG (Web Security Testing Guide) organizes testing into 11 categories (Info Gathering, Config/Deploy Mgmt, Identity Mgmt, Authentication, Authorization, Session Mgmt, Input Validation, Error Handling, Cryptography, Business Logic, Client Side).
+  - Source: https://owasp.org/www-project-web-security-testing-guide/
+  - Label: verified (public standard)

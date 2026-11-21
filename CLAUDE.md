@@ -116,6 +116,45 @@ reports/report-draft-en.md
 | `/pentest-roundout` | Top 10 sweep â€” headers, SCA, crypto, design, integrity, logging, races |
 | `/pentest-report` | Evidence export, assemble EN draft, Otoi-san handoff, debrief prep |
 
+### Why six phases (and what we deliberately left out)
+
+The six phases above cover where technical work actually lands for a web-app engagement. "Standard" models (PTES is 7, OWASP WSTG is 11 categories) carry more; we either folded them into existing phases or dropped them on purpose. Keep this map in mind so additions happen on signal, not reflex.
+
+```
+PTES (7)                        burp-conductor (6)        what we did
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+1. Pre-engagement / scoping     (no phase)                folded into /pentest-start
+                                                          + SCOPE.md + safety.py
+2. Intelligence gathering       recon                     âœ“
+3. Threat modeling              (inside recon)            folded â€” threat model
+                                                          lives in engagement.yaml
+4. Vulnerability analysis       inject (+ nuclei/katana)  âœ“
+5. Exploitation                 (stops at PoC)            dropped
+6. Post-exploitation            (no phase)                dropped
+7. Reporting                    report                    âœ“
+                                roundout                  our own â€” OWASP Top-10
+                                                          sweep as safety net
+                                auth / access             split out of PTES step 4;
+                                                          web engagements live and
+                                                          die on these
+```
+
+**Why the drops are deliberate:**
+
+- **Exploitation / post-exploitation** â€” chained pivot, persistence, lateral movement. Red-team deliverable, not web-app deliverable. Clients buy "find the bug, prove it exists, document the fix." A `/pentest-exploit` phase would mostly be a checklist of destructive actions HITL already gates.
+- **Pre-engagement as a phase** â€” scoping, RoE, legal, test window. Real work but not the harness's work (email + signed SOW). `/pentest-start` captures its outputs (scope hosts, accounts, window) which is what the technical phases actually consume.
+- **Threat modeling as a standalone phase** â€” PTES separates it; OWASP WSTG doesn't. Folding into recon is the common move because the output (asset list + abuse cases + trust boundaries) is what recon already produces.
+
+**Genuinely missing â€” add on signal, not reflex:**
+
+| Gap | When it bites | Fix if needed |
+|-----|---------------|---------------|
+| **Retest / remediation verification** | Client fixes findings â†’ asks "confirm the fix landed" | `/pentest-retest <slug>` â€” re-run just the affected check from engagement.yaml, diff old-vs-new evidence. First one to add when a client actually asks. |
+| **Exploit chaining** | Two mediums chain to a critical (open redirect + OAuth state reuse â†’ ATO) | No new phase. Add a `chains:` list in engagement.yaml + a hunt note in `/pentest-roundout`. |
+| **Business-logic as a first-class phase** | Checkout race, coupon replay, workflow skip | Currently split across access (authz logic) and inject (race via Turbo Intruder). Pull out to `/pentest-logic` only for a product whose whole value is workflow (banking, booking, checkout). |
+
+Decision rule: don't add a phase just because a model lists it. Add a phase when a real engagement surfaces work the existing six can't absorb.
+
 ---
 
 ## Burp extensions â€” what the MCP cannot do for you
