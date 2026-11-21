@@ -1,8 +1,9 @@
-﻿# burp-mcp â€” Engagement Spine
+﻿# burp-conductor â€” Engagement Spine
 
-Claude Code + PortSwigger Burp MCP plugin. Claude drives the engagement; Burp
-is the proxy, scanner, and active-attack engine. `safety.py` enforces scope,
-HITL gates, response caps, and prompt-injection quarantine.
+MCP plugin wrapping PortSwigger's Burp MCP extension. Works with any MCP-capable
+AI harness (Claude Code, Codex, Cline, Cursor, ...); the harness drives the
+engagement, Burp is the proxy, scanner, and active-attack engine. `safety.py`
+enforces scope, HITL gates, response caps, and prompt-injection quarantine.
 
 ---
 

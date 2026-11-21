@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "burp-mcp"
+name = "burp-conductor"
 version = "0.1.0"
-description = "Safety-wrapper MCP harness in front of PortSwigger's Burp MCP extension"
+description = "MCP safety-wrapper and engagement spine around PortSwigger's Burp MCP extension; usable from any MCP-capable AI harness (Claude Code, Codex, Cline, Cursor, ...)"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -18,7 +18,7 @@ dependencies = [
 
 [project.scripts]
 burp-stdio = "server:main"
-burp-mcp = "cli:main"
+burp-conductor = "cli:main"
 
 [tool.setuptools]
 py-modules = ["safety", "persist", "server", "cli"]

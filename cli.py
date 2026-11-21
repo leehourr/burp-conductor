@@ -1,4 +1,4 @@
-"""burp-mcp CLI — admin subcommands for the harness.
+"""burp-conductor CLI — admin subcommands for the plugin.
 
 Subcommands:
   install-skills   Copy .claude/commands/pentest-*.md into ~/.claude/commands/
@@ -50,7 +50,7 @@ def cmd_install_skills(args: argparse.Namespace) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(prog="burp-mcp")
+    parser = argparse.ArgumentParser(prog="burp-conductor")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_install = sub.add_parser(

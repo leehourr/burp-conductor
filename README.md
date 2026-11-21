@@ -1,9 +1,15 @@
-# burp-mcp — Claude Code plugin for Burp Suite
+# burp-conductor — MCP plugin for Burp Suite
 
-A Claude Code **plugin** (MCP server + skills + hooks) that wraps PortSwigger's official Burp MCP extension
-(SSE on `127.0.0.1:9876`). Adds scope enforcement, tiered HITL gates, response
-quarantine, report-path confinement, auth-header scrubbing, and engagement
-state (`reports/<slug>/engagement.yaml`) that survives Burp Community restarts.
+An **MCP plugin** (server + slash-command skills + hooks) that wraps PortSwigger's official
+Burp MCP extension (SSE on `127.0.0.1:9876`). Usable from any MCP-capable AI harness —
+Claude Code, Codex, Cline, Cursor, or any other MCP client. Adds scope enforcement,
+tiered HITL gates, response quarantine, report-path confinement, auth-header scrubbing,
+and engagement state (`reports/<slug>/engagement.yaml`) that survives Burp Community
+restarts.
+
+The slash-command skills under `.claude/commands/` are Claude Code-native (that's where
+the `/pentest-*` convention is best supported today), but the MCP server itself is
+transport-standard — any client that speaks MCP can call it.
 
 Full install + usage guide: **see `docs/guide.md`** (pending).
 
@@ -13,14 +19,15 @@ Full install + usage guide: **see `docs/guide.md`** (pending).
 
 ```bash
 # 1. Clone
-git clone https://github.com/<you>/burp-mcp.git
-cd burp-mcp
+git clone https://github.com/<you>/burp-conductor.git
+cd burp-conductor
 
-# 2. Install Python package (registers burp-stdio + burp-mcp on PATH)
+# 2. Install Python package (registers burp-stdio + burp-conductor on PATH)
 pip install -e .
 
 # 3. Install slash commands user-globally, so /pentest-* resolve from any dir
-burp-mcp install-skills
+#    (Claude Code only — other MCP harnesses skip this step)
+burp-conductor install-skills
 
 # 4. Register MCP servers at user scope (one time, per Claude Code install)
 cp .mcp.json.example .mcp.json   # or register via `claude mcp add --scope user`
@@ -61,7 +68,7 @@ not hardcoded in source.
 - `server.py` — stdio MCP server; proxies to upstream SSE
 - `safety.py` — 5-control spine (scope, HITL, quarantine, confinement, auth scrub)
 - `persist.py` — JSONL request log + markdown finding writer + engagement state
-- `cli.py` — `burp-mcp install-skills`
+- `cli.py` — `burp-conductor install-skills`
 - `.claude/commands/` — the `/pentest-*` slash commands
 - `templates/engagement.yaml` — engagement state template
 

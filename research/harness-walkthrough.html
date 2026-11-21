@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>burp-mcp Plugin Walkthrough â€” OWASP Juice Shop Dry-Run</title>
+<title>burp-conductor Plugin Walkthrough â€” OWASP Juice Shop Dry-Run</title>
 <style>
   :root {
     --bg: #0f1115;
@@ -130,7 +130,7 @@
 <body>
 <div class="wrap">
 
-<h1>burp-mcp Plugin Walkthrough</h1>
+<h1>burp-conductor Plugin Walkthrough</h1>
 <p class="sub">
   A six-phase pentest, driven by Claude Code + PortSwigger Burp MCP, against OWASP Juice Shop v20.3.0.
   Written as a walkthrough and a learning doc â€” the concepts are introduced briefly so the next
@@ -166,11 +166,12 @@
 </p>
 
 <p>
-  <strong>burp-mcp</strong> is a Claude Code plugin â€” an MCP server (<code>server.py</code>,
+  <strong>burp-conductor</strong> is an MCP plugin â€” an MCP server (<code>server.py</code>,
   <code>safety.py</code>, <code>persist.py</code>), a set of slash-command skills under
-  <code>.claude/commands/</code>, and an <code>.mcp.json</code> wiring file. Claude Code is the
-  orchestrator; the plugin wraps PortSwigger's official Burp MCP (24 upstream tools â€” HTTP send,
-  Repeater, Intruder, scanner reads, proxy history, encoders) behind five controls:
+  <code>.claude/commands/</code>, and an <code>.mcp.json</code> wiring file. Usable from any
+  MCP-capable AI harness (Claude Code, Codex, Cline, Cursor, â€¦); the harness is the orchestrator,
+  the plugin wraps PortSwigger's official Burp MCP (24 upstream tools â€” HTTP send, Repeater,
+  Intruder, scanner reads, proxy history, encoders) behind five controls:
 </p>
 
 <ul>
@@ -186,17 +187,18 @@
   <p>
     The stack is the official <code>mcp</code> Python SDK plus file-convention slash commands.
     No LangChain, no LangGraph, no custom orchestrator. LLM-orchestration frameworks sit on top
-    of model calls; this plugin does not make model calls â€” Claude Code does. Adding a framework
-    above an MCP server would be a second orchestrator fighting the first. The PortSwigger
-    reference server, Anthropic's reference servers, and every community MCP follow the same
-    shape: decorated functions over stdio or SSE.
+    of model calls; this plugin does not make model calls â€” the host harness does. Adding a
+    framework above an MCP server would be a second orchestrator fighting the first. The
+    PortSwigger reference server, Anthropic's reference servers, and every community MCP follow
+    the same shape: decorated functions over stdio or SSE.
   </p>
   <p>
-    One gap worth naming: the repo does not yet carry a <code>plugin.json</code> manifest at
-    root, so installation is <code>git clone</code> + <code>pip install -e .</code> +
-    <code>burp-mcp install-skills</code> rather than <code>/plugin install leehourr/burp-mcp</code>.
-    Functionally identical; the manifest is the only thing between this and first-class
-    Claude Code plugin distribution.
+    One gap worth naming: the repo does not yet carry a Claude Code <code>plugin.json</code>
+    manifest at root, so installation on Claude Code is <code>git clone</code> +
+    <code>pip install -e .</code> + <code>burp-conductor install-skills</code> rather than
+    <code>/plugin install leehourr/burp-conductor</code>. Other MCP harnesses only need the
+    first two steps plus their own MCP-server registration. Functionally identical; the
+    manifest is the only thing between this and first-class Claude Code plugin distribution.
   </p>
 </div>
 
@@ -485,7 +487,7 @@ output:   where findings and verify_queue entries land</code></pre>
 
 <ul>
   <li><strong>Empty / connection refused on <code>burp-direct</code></strong> â€” the Burp MCP extension isn't running. Reopen Burp, confirm the extension is loaded, re-check the SSE port.</li>
-  <li><strong>Empty / timeout on <code>burp-stdio</code></strong> â€” the Python wrapper isn't installed or the MCP config path is wrong. Verify <code>python -m burp_mcp</code> runs from the repo root.</li>
+  <li><strong>Empty / timeout on <code>burp-stdio</code></strong> â€” the Python wrapper isn't installed or the MCP config path is wrong. Verify <code>burp-stdio</code> on PATH after <code>pip install -e .</code>.</li>
 </ul>
 
 <h3>4.5.5 &nbsp; Last gate â€” scope file</h3>
