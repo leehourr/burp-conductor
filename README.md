@@ -1,6 +1,6 @@
-# burp-mcp — safety harness
+# burp-mcp — Claude Code plugin for Burp Suite
 
-Safety-wrapper MCP harness in front of PortSwigger's official Burp MCP extension
+A Claude Code **plugin** (MCP server + skills + hooks) that wraps PortSwigger's official Burp MCP extension
 (SSE on `127.0.0.1:9876`). Adds scope enforcement, tiered HITL gates, response
 quarantine, report-path confinement, auth-header scrubbing, and engagement
 state (`reports/<slug>/engagement.yaml`) that survives Burp Community restarts.
