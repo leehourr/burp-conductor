@@ -166,9 +166,11 @@
 </p>
 
 <p>
-  The <strong>burp-mcp plugin</strong> is a thin Python layer on top. It gives Claude Code
-  access to Burp's own MCP server (24 upstream tools â€” HTTP send, Repeater, Intruder, scanner
-  reads, proxy history, encoders) wrapped behind a safety proxy that does five things:
+  <strong>burp-mcp</strong> is a Claude Code plugin â€” an MCP server (<code>server.py</code>,
+  <code>safety.py</code>, <code>persist.py</code>), a set of slash-command skills under
+  <code>.claude/commands/</code>, and an <code>.mcp.json</code> wiring file. Claude Code is the
+  orchestrator; the plugin wraps PortSwigger's official Burp MCP (24 upstream tools â€” HTTP send,
+  Repeater, Intruder, scanner reads, proxy history, encoders) behind five controls:
 </p>
 
 <ul>
@@ -178,6 +180,25 @@
   <li><strong>Scrubs auth material</strong> (<code>Authorization</code>, <code>Cookie</code>, <code>Set-Cookie</code>, <code>X-API-Key</code>, <code>X-Auth-Token</code>) from the request log.</li>
   <li><strong>Quarantines</strong> upstream responses tagged <code>quarantine="true"</code> so prompt-injection attempts in a captured response body cannot steer Claude.</li>
 </ul>
+
+<div class="concept">
+  <h4>Why plain Python and no framework</h4>
+  <p>
+    The stack is the official <code>mcp</code> Python SDK plus file-convention slash commands.
+    No LangChain, no LangGraph, no custom orchestrator. LLM-orchestration frameworks sit on top
+    of model calls; this plugin does not make model calls â€” Claude Code does. Adding a framework
+    above an MCP server would be a second orchestrator fighting the first. The PortSwigger
+    reference server, Anthropic's reference servers, and every community MCP follow the same
+    shape: decorated functions over stdio or SSE.
+  </p>
+  <p>
+    One gap worth naming: the repo does not yet carry a <code>plugin.json</code> manifest at
+    root, so installation is <code>git clone</code> + <code>pip install -e .</code> +
+    <code>burp-mcp install-skills</code> rather than <code>/plugin install leehourr/burp-mcp</code>.
+    Functionally identical; the manifest is the only thing between this and first-class
+    Claude Code plugin distribution.
+  </p>
+</div>
 
 <div class="concept">
   <h4>Why both an upstream server and a wrapper?</h4>
