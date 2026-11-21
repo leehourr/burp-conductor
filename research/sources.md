@@ -300,3 +300,10 @@ partial listing) are both superseded. Settle at **26** everywhere.
 | Universal HTTP-proxy resume ceiling — three states neither Community+harness nor Pro restore: (1) server-side DB / app state across target restart, (2) Chrome SPA state / `localStorage` / `sessionStorage`, (3) auth-token server-side survival (always re-login). Added to raw-vs-harness-walkthrough.html as "Resume-workflow parity" subsection. | Analytical — derived from Pro project-file scope (history + scanner issues + Repeater/Intruder tabs; no target DB, no embedded-Chromium profile) | 2026-11-18 |
 
 - interactsh-client v1.4.1 — verified from binary self-report during juice-shop SSRF OOB proof (2026-11-19). Source: `interactsh-client` stdout line `[INF] Current interactsh version 1.4.1 (latest)` (bg task b4hii75ed output, 2026-11-19).
+
+## 2026-11-21 — diff_fuzz tool (Backslash-Powered-Scanner stand-in)
+- Fact: Burp extension "Backslash-Powered Scanner" by James Kettle is Apache-2.0 licensed and hooks `IScannerCheck` (Pro-gated API), so it cannot run inside Burp Community.
+  - Source: https://github.com/PortSwigger/backslash-powered-scanner (verified 2026-11-21)
+  - Label: verified
+- Fact: Our `tools/diff_fuzz.py` reimplements BPS's core idea (baseline → probe → signature-diff → escape-partner confirm) without the `IScannerCheck` surface so it runs standalone under Community.
+  - Label: in-repo implementation, see `tools/diff_fuzz.py` header
