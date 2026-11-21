@@ -1611,6 +1611,62 @@ auth_method_hint: jwt</code></pre>
   </table>
 </div>
 
+<div class="concept">
+  <h4>Why two tools instead of one — reach-depth vs check-depth</h4>
+  <p>
+    Katana never scans. It still makes the scan deeper because depth has two factors, and
+    Nuclei can only supply one of them. Scan coverage is the product:
+  </p>
+  <p style="text-align:center;"><strong>Depth = right URL × right rendering context × right template</strong></p>
+  <p>
+    Nuclei owns the templates (check-depth). Katana owns the URL list (reach-depth). An
+    unscanned URL is an unfound bug no matter how rich the template library gets. A SPA
+    route that only exists after Angular renders the page is invisible to a
+    proxy-history-based URL list — Burp captures <code>/rest/user/login</code>,
+    <code>/api/Products</code>, <code>/#/search</code>, but not
+    <code>/#/administration</code>, <code>/#/recycle</code>, <code>/#/complain</code>,
+    <code>/#/privacy-security</code>, <code>/#/token-sale</code>. Those exist only after a
+    real Chrome executes the router.
+  </p>
+
+  <h5 style="margin:12px 0 4px;">Coverage with and without a headless crawl</h5>
+<pre style="background:#0f1115;color:#e6e6e6;padding:12px;border-radius:6px;overflow-x:auto;">
+SERVER-RENDERED SURFACE        SPA / JS-RENDERED SURFACE
+██████████████████████  &lt;--  proxy history sees this
+██████████████████████        ░░░░░░░░░░░░░░░░░░░░░░  &lt;-- proxy misses this
+██████████████████████        ░░░░░░░░░░░░░░░░░░░░░░
+                              ░░░░░░░░░░░░░░░░░░░░░░
+
+                 Katana -headless -system-chrome
+                              │
+                              ▼
+██████████████████████        ██████████████████████  &lt;-- now Nuclei can scan both
+██████████████████████        ██████████████████████
+██████████████████████        ██████████████████████
+</pre>
+
+  <h5 style="margin:12px 0 4px;">Without Katana vs with Katana</h5>
+  <table>
+    <tr><th>Scenario</th><th>URLs Nuclei scans</th><th>Bugs reachable</th></tr>
+    <tr><td>Nuclei alone on proxy history</td><td>Server-rendered endpoints only</td><td>Server-side CVEs, misconfig, exposed panels — SPA routes untested</td></tr>
+    <tr><td>Katana <code>-headless</code> → Nuclei <code>-headless</code></td><td>Server-rendered + JS-router routes</td><td>Everything above, plus DOM-XSS / prototype pollution / postMessage on SPA-only routes</td></tr>
+  </table>
+
+  <h5 style="margin:12px 0 4px;">Reach-depth vs check-depth</h5>
+  <table>
+    <tr><th>Factor</th><th>Supplied by</th><th>What "deeper" means</th></tr>
+    <tr><td>Reach-depth</td><td>Katana (crawl)</td><td>More URLs, including SPA routes only visible after JS renders</td></tr>
+    <tr><td>Check-depth</td><td>Nuclei (templates)</td><td>More vuln classes probed per URL, including client-side templates run in real Chrome</td></tr>
+  </table>
+
+  <p>
+    Deeper crawl expands reach-depth; deeper templates expand check-depth; you need both
+    multiplied together to match Pro Scanner coverage. Katana contributes the first factor
+    without ever running a scan check itself — that is why "it never scans" and "it makes
+    scanning deeper" are both true.
+  </p>
+</div>
+
 <div class="shot-group">
   <img class="shot" src="../reports/juice-shop/screenshots/inject/nuclei-pass0-passive.png" alt="Nuclei Pass 0 passive-template sweep rendered summary">
   <p class="caption">Pass 0 â€” passive-template sweep (<code>http/misconfiguration/</code>, <code>http/exposures/</code>, <code>ssl/</code>) against <code>http://localhost:3000</code>. Baseline filed first; everything after reasons from this.</p>
