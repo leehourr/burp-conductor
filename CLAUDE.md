@@ -150,7 +150,7 @@ Decide per extension: reimplement in MCP, run in GUI side-by-side, or skip.
 
 Burp Community does not ship Crawl, Active Scanner, or Collaborator. We replace each with a ProjectDiscovery CLI tool, invoked from the plugin via `Bash` â€” not through MCP (these are not BApps).
 
-**Goal: match Burp Pro Scanner depth, not just breadth.** Pro Scanner's edge is (1) headless-Chrome DOM execution for client-side bugs and (2) stateful session handling across multi-step flows. The free stack below closes both gaps â€” Katana + Nuclei each have a headless mode that executes JS in real Chrome, and session state is carried by the plugin's own auth material. Fast-HTTP scans still run first; headless is the second pass, not the only pass.
+**Goal: match Burp Pro Scanner depth, not just breadth.** Pro Scanner's edge is (1) headless-Chrome DOM execution for client-side bugs and (2) stateful session handling across multi-step flows. The free stack closes both gaps with a clean division of labor: **Katana crawls, Nuclei scans.** Katana `-headless` executes JS in real Chrome to *discover* SPA / JS-rendered routes â€” it never scans for vulns. Nuclei `-headless` runs client-side vuln templates (DOM-XSS, prototype pollution, postMessage bugs) in real Chrome against the URL list it is handed â€” it never crawls. We need both because Nuclei can only scan URLs it already has, and those SPA routes only exist after a browser renders the page. Session state is carried by the plugin's own auth material. Fast-HTTP scans still run first; headless is the second pass, not the only pass.
 
 | Pro feature | Free alternative | Invocation | Phase hook |
 |-------------|------------------|-----------|-----------|
