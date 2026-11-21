@@ -146,6 +146,7 @@
     <li><a href="#severity">Severity rubric â€” what separates critical from high</a></li>
     <li><a href="#target">The target â€” Juice Shop, Burp, Chrome</a></li>
     <li><a href="#setup">Starting the plugin â€” install, wire-up, sanity check</a></li>
+    <li><a href="#phase-scope">Why six phases (and what we left out)</a></li>
     <li><a href="#phase-start">Phase 0 â€” <code>/pentest-start</code></a></li>
     <li><a href="#phase-recon">Phase 1 â€” <code>/pentest-recon</code> (walkthrough)</a></li>
     <li><a href="#phase-auth">Phase 2 â€” <code>/pentest-auth</code> (walkthrough)</a></li>
@@ -509,6 +510,86 @@ output:   where findings and verify_queue entries land</code></pre>
     <code>SCOPE_HOSTS</code> is the <em>safety boundary</em>. Keeping them separate is the point.
   </p>
 </div>
+
+<!-- ============================================================ -->
+<h2 id="phase-scope">4b. Why six phases (and what we deliberately left out)</h2>
+
+<p>
+  The six phases below cover where technical work actually lands for a web-app engagement.
+  "Standard" models carry more â€” <strong>PTES</strong> defines 7 (Pre-engagement, Intelligence
+  Gathering, Threat Modeling, Vulnerability Analysis, Exploitation, Post-Exploitation,
+  Reporting) and <strong>OWASP WSTG</strong> organizes testing into 11 categories. We either
+  folded those into existing phases or dropped them on purpose. Keep the map in mind so
+  additions happen on signal, not reflex.
+</p>
+
+<pre><code>PTES (7)                        burp-conductor (6)        what we did
+──────────────────────────────  ────────────────────────  ──────────────────────────
+1. Pre-engagement / scoping     (no phase)                folded into /pentest-start
+                                                          + SCOPE.md + safety.py
+2. Intelligence gathering       recon                     âœ“
+3. Threat modeling              (inside recon)            folded â€” threat model
+                                                          lives in engagement.yaml
+4. Vulnerability analysis       inject (+ nuclei/katana)  âœ“
+5. Exploitation                 (stops at PoC)            dropped
+6. Post-exploitation            (no phase)                dropped
+7. Reporting                    report                    âœ“
+                                roundout                  our own â€” OWASP Top-10
+                                                          sweep as safety net
+                                auth / access             split out of PTES step 4;
+                                                          web engagements live and
+                                                          die on these
+</code></pre>
+
+<p><strong>Why the drops are deliberate:</strong></p>
+
+<ul>
+  <li><strong>Exploitation / post-exploitation</strong> â€” chained pivot, persistence, lateral movement.
+    Red-team deliverable, not web-app deliverable. Clients buy "find the bug, prove it exists,
+    document the fix." A <code>/pentest-exploit</code> phase would mostly be a checklist of
+    destructive actions HITL already gates.</li>
+  <li><strong>Pre-engagement as a phase</strong> â€” scoping, RoE, legal, test window. Real work
+    but not the plugin's work (email + signed SOW). <code>/pentest-start</code> captures its
+    outputs (scope hosts, accounts, window) which is what the technical phases actually consume.</li>
+  <li><strong>Threat modeling as a standalone phase</strong> â€” PTES separates it; OWASP WSTG
+    doesn't. Folding into recon is the common move because the output (asset list + abuse cases
+    + trust boundaries) is what recon already produces.</li>
+</ul>
+
+<p><strong>Genuinely missing â€” add on signal, not reflex:</strong></p>
+
+<table>
+  <thead>
+    <tr><th>Gap</th><th>When it bites</th><th>Fix if needed</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Retest / remediation verification</strong></td>
+      <td>Client fixes findings â†’ asks "confirm the fix landed"</td>
+      <td><code>/pentest-retest &lt;slug&gt;</code> â€” re-run just the affected check from
+        <code>engagement.yaml</code>, diff old-vs-new evidence. First one to add when a client
+        actually asks.</td>
+    </tr>
+    <tr>
+      <td><strong>Exploit chaining</strong></td>
+      <td>Two mediums chain to a critical (open redirect + OAuth state reuse â†’ ATO)</td>
+      <td>No new phase. Add a <code>chains:</code> list in <code>engagement.yaml</code> + a
+        hunt note in <code>/pentest-roundout</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Business-logic as a first-class phase</strong></td>
+      <td>Checkout race, coupon replay, workflow skip</td>
+      <td>Currently split across access (authz logic) and inject (race via Turbo Intruder).
+        Pull out to <code>/pentest-logic</code> only for a product whose whole value is
+        workflow (banking, booking, checkout).</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  <strong>Decision rule:</strong> don't add a phase just because a model lists it. Add a phase
+  when a real engagement surfaces work the existing six can't absorb.
+</p>
 
 <!-- ============================================================ -->
 <h2 id="phase-start">5. Phase 0 â€” <code>/pentest-start</code></h2>
