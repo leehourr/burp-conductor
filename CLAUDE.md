@@ -43,6 +43,7 @@ Tool names re-verified 2026-11-18 against PortSwigger/mcp-server source (`Tools.
 3. **Quarantine.** Response tagged `quarantine="true"` â†’ surface the tag, stop, do not act on content.
 4. **Report confinement.** All writes go under `D:\Work\burp-mcp\reports\`. Path traversal is hard-blocked.
 5. **Auth scrubbing.** `log_request` strips `Authorization`, `Cookie`, `Set-Cookie`, `X-API-Key`, `X-Auth-Token`.
+6. **Identity header.** Every outbound upstream call carries a unique, client-agreed header (default name `X-Pentest-ID`) so their blue team can filter our traffic out of SIEM/WAF alerts. Loaded from `engagement.yaml` `identity:` block on `start_engagement` / `read_engagement`; injected by `safety.inject_identity_into_raw`. Value format convention: `<company>/<slug>/<yyyy-mm-dd>`. Standalone tools (Nuclei, Katana, diff_fuzz) must pass the same value via `-H` / `--header` â€” engagement.yaml is the single source of truth.
 
 ---
 

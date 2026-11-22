@@ -21,6 +21,13 @@ SCOPE_HOSTS: set[str] = {
     # add client domains here, e.g. "example.com", "api.example.com"
 }
 
+# Identity header — unique, grep-able tag the client whitelists so their blue
+# team can filter our traffic out of SIEM / WAF alerts. Agreed in writing
+# before the engagement starts; recorded in engagement.yaml under `identity:`.
+# Set via load_identity(); every outbound upstream call injects it.
+IDENTITY_HEADER_NAME: str | None = None
+IDENTITY_HEADER_VALUE: str | None = None
+
 # Report root: env var wins (set per engagement or per machine), otherwise
 # fall back to ./reports under the current working directory. Picking CWD
 # means the harness runs from any engagement folder — clone-and-go, no
@@ -77,6 +84,40 @@ def load_scope(hosts: list[str]) -> None:
     """Replace SCOPE_HOSTS with the given list (plus loopback, always). Session-scoped."""
     global SCOPE_HOSTS
     SCOPE_HOSTS = {"localhost", "127.0.0.1", *(h.strip() for h in hosts if h.strip())}
+
+
+def load_identity(name: str | None, value: str | None) -> None:
+    """Set the identity header injected into every outbound upstream call.
+
+    Pass (None, None) to clear. Header name/value are validated as single-line
+    HTTP tokens — CR/LF forbidden to prevent header-split via engagement.yaml.
+    """
+    global IDENTITY_HEADER_NAME, IDENTITY_HEADER_VALUE
+    if not name or not value:
+        IDENTITY_HEADER_NAME = None
+        IDENTITY_HEADER_VALUE = None
+        return
+    if any(c in name for c in "\r\n:") or any(c in value for c in "\r\n"):
+        raise SafetyBlock("identity header name/value contains illegal CR/LF/colon")
+    IDENTITY_HEADER_NAME = name.strip()
+    IDENTITY_HEADER_VALUE = value.strip()
+
+
+def inject_identity_into_raw(raw_request: str) -> str:
+    """Insert the identity header into a raw HTTP/1.1 request string just after
+    the Host header. No-op if identity is unset or the header already present.
+    """
+    if not IDENTITY_HEADER_NAME or not IDENTITY_HEADER_VALUE:
+        return raw_request
+    marker = f"{IDENTITY_HEADER_NAME}:".lower()
+    if marker in raw_request.lower():
+        return raw_request
+    header_line = f"{IDENTITY_HEADER_NAME}: {IDENTITY_HEADER_VALUE}\r\n"
+    # Insert after the first \r\n (end of request line) so it sits above Host.
+    idx = raw_request.find("\r\n")
+    if idx < 0:
+        return raw_request
+    return raw_request[: idx + 2] + header_line + raw_request[idx + 2 :]
 
 
 def host_of(url: str) -> str | None:

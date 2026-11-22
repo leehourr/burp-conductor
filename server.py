@@ -108,6 +108,7 @@ async def http_get(url: str) -> str:
         path += "?" + parsed.query
     use_https = parsed.scheme == "https"
     raw_request = f"GET {path} HTTP/1.1\r\nHost: {host}:{port}\r\nConnection: close\r\n\r\n"
+    raw_request = safety.inject_identity_into_raw(raw_request)
 
     try:
         result = await upstream_call(
@@ -386,6 +387,9 @@ async def start_engagement(
     )
     if not result.startswith("BLOCKED"):
         safety.load_scope(hosts)
+        # Identity header is NOT auto-set — it must be filled in
+        # engagement.yaml and confirmed with the client before load.
+        # read_engagement / /pentest-resume will pick it up.
     return result
 
 
@@ -395,6 +399,16 @@ async def read_engagement(engagement: str) -> str:
     try:
         data = persist.read_state(engagement)
     except FileNotFoundError as e:
+        return f"BLOCKED: {e}"
+    # Side-effect: rehydrate scope + identity from state so a fresh session
+    # that opens an engagement is immediately ready to fire.
+    hosts = (data.get("scope") or {}).get("hosts") or []
+    if hosts:
+        safety.load_scope(hosts)
+    ident = data.get("identity") or {}
+    try:
+        safety.load_identity(ident.get("header_name"), ident.get("header_value"))
+    except safety.SafetyBlock as e:
         return f"BLOCKED: {e}"
     return json.dumps(data, indent=2, default=str)
 

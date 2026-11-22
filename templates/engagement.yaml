@@ -14,6 +14,14 @@ window:
   start: 2026-11-14
   end:   2026-11-21
 
+# Identity header — unique, grep-able tag our traffic carries so the client's
+# blue team can filter it out of SIEM / WAF alerts. Agreed in writing BEFORE
+# the engagement starts. Injected on every outbound call by safety.py.
+identity:
+  header_name: X-Pentest-ID
+  header_value: null             # e.g. Otoi/acme-webapp/2026-11-14
+  agreed_with_client: null       # ISO date the client confirmed the whitelist
+
 # ---------------------------------------------------------------------------
 # Auth state — captured once, reused by later phases.
 # ---------------------------------------------------------------------------
