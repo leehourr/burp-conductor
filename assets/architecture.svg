@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 880" role="img" aria-labelledby="t d" font-family="'Geist','Inter','Helvetica Neue',Arial,sans-serif">
-  <title id="t">burp-conductor engagement lifecycle</title>
+  <title id="t">burp-conductor engagement</title>
   <desc id="d">Tool surface band on top feeds seven engagement phases arranged left to right — Scoping, Recon, Auth, Access, Inject, Roundout, Report. The Report phase is the focal outcome. Below, a safety spine enforces scope, HITL, quarantine, confinement, auth scrub, and identity on every call.</desc>
 
   <style>
@@ -30,7 +30,7 @@
     </marker>
   </defs>
 
-  <text x="60" y="76" font-size="56" font-weight="700" class="ink">burp-conductor engagement lifecycle</text>
+  <text x="60" y="76" font-size="56" font-weight="700" class="ink">burp-conductor engagement</text>
   <text x="60" y="118" font-size="22" letter-spacing="2" class="muted">SCOPING · RECON · AUTH · ACCESS · INJECT · ROUNDOUT · REPORT</text>
 
   <!-- Tool surface band -->
