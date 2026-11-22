@@ -127,3 +127,4 @@ Then in Claude Code with `.mcp.json` present:
 - `list_upstream_tools` → list of Burp tools
 - `http_get url=http://localhost/` → `[OK]` with wrapped body
 - `http_get url=http://evil.com/` → `BLOCKED: out-of-scope host 'evil.com'`
+
