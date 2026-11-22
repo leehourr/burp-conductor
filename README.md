@@ -6,10 +6,11 @@ Codex, Cline, Cursor, or any other MCP client.
 
 burp-conductor is **not just a Burp MCP wrapper**. The proxy, scanner, and
 Repeater/Intruder work is delegated to PortSwigger's official Burp MCP
-extension (SSE on `127.0.0.1:9876`), but recon, SPA crawl, template-based
-active scanning, OOB interaction, and novel-injection discovery are driven
-by a free-stack of ProjectDiscovery CLIs plus an in-repo differential fuzzer,
-invoked under the same safety spine via `Bash` calls from the phase skills.
+extension (streamable HTTP MCP at `http://127.0.0.1:9876/mcp`; SSE only as
+fallback), but recon, SPA crawl, template-based active scanning, OOB
+interaction, and novel-injection discovery are driven by a free stack of
+ProjectDiscovery CLIs plus an in-repo differential fuzzer, invoked under
+the same safety spine via `Bash` calls from the phase skills.
 
 ```
 ┌─────────────────────── burp-conductor ────────────────────────┐
@@ -23,7 +24,7 @@ invoked under the same safety spine via `Bash` calls from the phase skills.
 ┌──────────────┐    ┌───────────────────────────────────────┐
 │  Burp MCP    │    │  Free stack (invoked via Bash)        │
 │  (26 tools)  │    │  katana · nuclei · interactsh         │
-│  SSE 9876    │    │  tools/diff_fuzz.py (BPS stand-in)    │
+│  HTTP 9876   │    │  tools/diff_fuzz.py (BPS stand-in)    │
 └──────────────┘    └───────────────────────────────────────┘
 ```
 
@@ -97,7 +98,7 @@ export BURP_MCP_REPORTS_DIR="$(pwd)/reports"   # optional; defaults to ./reports
 ## Prereqs
 
 - Burp Suite Community (or Pro) with the "MCP Server" BApp extension loaded
-  → SSE on `127.0.0.1:9876`
+  → streamable HTTP MCP at `http://127.0.0.1:9876/mcp` (SSE is a fallback transport only)
 - Python ≥ 3.11
 - A recent Go toolchain (for `go install` of Katana / Nuclei / interactsh — see each project's README for the current minimum)
 - Google Chrome (required for `-headless -system-chrome` passes)
@@ -116,7 +117,7 @@ Scope and identity are loaded per engagement from `engagement.yaml` via
 
 ## Repo layout
 
-- `server.py` — stdio MCP server; proxies to upstream SSE
+- `server.py` — stdio MCP server; proxies to upstream Burp MCP over streamable HTTP (SSE fallback)
 - `safety.py` — safety spine (scope, HITL, quarantine, confinement, auth scrub, identity injection)
 - `persist.py` — JSONL request log + markdown finding writer + engagement state
 - `cli.py` — `burp-conductor install-skills`

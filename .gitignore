@@ -11,3 +11,6 @@ dist/
 # All engagement output ignored (client confidentiality + practice-lab noise).
 # Keep the directory tree out of the repo entirely; harness recreates it per engagement.
 reports/
+
+# Walkthroughs, source citations, reference HTML — local notes, not shipped.
+research/
