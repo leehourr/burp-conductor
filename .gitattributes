@@ -5,3 +5,8 @@ research/**/*.html linguist-documentation
 
 # SVG diagrams in the README are documentation, not source.
 assets/*.svg linguist-documentation
+
+# Force every .md to be classified as Markdown. Phase-skill docs contain lots of
+# <tag>-shaped tool-call syntax which Linguist's heuristics otherwise read as HTML.
+*.md linguist-language=Markdown
+*.md linguist-detectable=false
