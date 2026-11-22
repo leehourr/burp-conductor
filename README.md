@@ -99,7 +99,7 @@ export BURP_MCP_REPORTS_DIR="$(pwd)/reports"   # optional; defaults to ./reports
 - Burp Suite Community (or Pro) with the "MCP Server" BApp extension loaded
   → SSE on `127.0.0.1:9876`
 - Python ≥ 3.11
-- Go ≥ 1.21 (for Katana / Nuclei / interactsh)
+- A recent Go toolchain (for `go install` of Katana / Nuclei / interactsh — see each project's README for the current minimum)
 - Google Chrome (required for `-headless -system-chrome` passes)
 - Chrome configured to proxy through Burp (`--proxy-server=127.0.0.1:8080
   --proxy-bypass-list="<-loopback>"`)
