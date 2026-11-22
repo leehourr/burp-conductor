@@ -1,0 +1,4 @@
+# Walkthroughs and reference docs are HTML by delivery format, not source code.
+# Mark them as documentation so GitHub Linguist doesn't count them in the language bar.
+research/*.html linguist-documentation
+research/**/*.html linguist-documentation

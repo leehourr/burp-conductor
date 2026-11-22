@@ -1,0 +1,537 @@
+<title>burp-conductor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Analyst-report register — single accent, dense tables, flat prose. */
+:root {
+  --bg: #fafaf7;
+  --panel: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #5a5a58;
+  --rule: #e5e4df;
+  --accent: #b7410e;        /* rust — unique to this project, not stock blue */
+  --accent-soft: #fbe9e0;
+  --code-bg: #f3f2ee;
+  --ok: #2d6a4f;
+  --warn: #8a5a00;
+  --crit: #a1261b;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a;
+    --panel: #1b1d22;
+    --fg: #e8e6df;
+    --muted: #9a988f;
+    --rule: #2a2c32;
+    --accent: #e07a4a;
+    --accent-soft: #3a211a;
+    --code-bg: #23252b;
+    --ok: #70c097;
+    --warn: #d4a44a;
+    --crit: #e76f66;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --panel: #1b1d22; --fg: #e8e6df; --muted: #9a988f;
+  --rule: #2a2c32; --accent: #e07a4a; --accent-soft: #3a211a;
+  --code-bg: #23252b; --ok: #70c097; --warn: #d4a44a; --crit: #e76f66;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 2.5rem 4rem;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+h1 { font-size: 2.1rem; margin: 0 0 .3rem; letter-spacing: -0.025em; }
+h2 { font-size: 1.35rem; margin: 2.5rem 0 .6rem; padding-bottom: .3rem; border-bottom: 1px solid var(--rule); }
+h3 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; color: var(--accent); }
+p  { margin: .5rem 0 .9rem; }
+.lede { color: var(--muted); font-size: 1rem; margin: 0 0 2rem; max-width: 70ch; }
+.eyebrow { text-transform: uppercase; font-size: .72rem; letter-spacing: .14em; color: var(--accent); font-weight: 600; }
+
+code, pre { font-family: var(--font-mono); font-size: .88rem; }
+code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+pre {
+  background: var(--code-bg); border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+  padding: .85rem 1rem; border-radius: 4px; overflow-x: auto; line-height: 1.5;
+  margin: .8rem 0 1.1rem;
+}
+pre code { background: transparent; padding: 0; }
+
+.diagram { font-family: var(--font-mono); font-size: .8rem; line-height: 1.35; white-space: pre; }
+
+table { width: 100%; border-collapse: collapse; margin: .8rem 0 1.2rem; font-size: .9rem; }
+th, td { border-bottom: 1px solid var(--rule); padding: .5rem .55rem; text-align: left; vertical-align: top; }
+th { font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: .72rem; letter-spacing: .08em; }
+td code { font-size: .82rem; }
+.tbl-wrap { overflow-x: auto; }
+
+.callout {
+  border: 1px solid var(--rule); border-left: 3px solid var(--accent);
+  background: var(--panel); padding: .7rem 1rem; border-radius: 4px; margin: 1rem 0;
+  font-size: .92rem;
+}
+.callout.warn { border-left-color: var(--warn); }
+.callout.crit { border-left-color: var(--crit); }
+
+.pill { display: inline-block; font-size: .72rem; padding: 1px 7px; border-radius: 10px;
+        background: var(--accent-soft); color: var(--accent); font-weight: 500; letter-spacing: .02em; }
+.pill.ok   { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); }
+.pill.warn { background: color-mix(in srgb, var(--warn) 22%, transparent); color: var(--warn); }
+.pill.crit { background: color-mix(in srgb, var(--crit) 22%, transparent); color: var(--crit); }
+
+ul, ol { padding-left: 1.3rem; }
+li { margin: .2rem 0; }
+li > strong { color: var(--fg); }
+
+.toc {
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 4px;
+  padding: .9rem 1.2rem; margin: 1.5rem 0 2rem; font-size: .9rem; columns: 2; column-gap: 2rem;
+}
+.toc a { color: var(--fg); text-decoration: none; display: block; padding: .15rem 0; }
+.toc a:hover { color: var(--accent); }
+
+.qa { border-top: 1px solid var(--rule); padding-top: .9rem; margin-top: 1rem; }
+.qa .q { font-weight: 600; margin-bottom: .2rem; }
+.qa .q::before { content: "Q. "; color: var(--accent); }
+
+footer { margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: .82rem; color: var(--muted); }
+
+@media (max-width: 640px) {
+  body { padding-block: 1.5rem 3rem; font-size: 14.5px; }
+  h1 { font-size: 1.65rem; }
+  h2 { font-size: 1.15rem; }
+  .toc { columns: 1; }
+  .diagram { font-size: .72rem; }
+}
+</style>
+
+<span class="eyebrow">Project reference · 2026-11-21</span>
+<h1>burp-conductor</h1>
+<p class="lede">An MCP plugin that wraps PortSwigger's Burp MCP extension with a safety spine, an engagement state model, and a six-phase pentest workflow. Any MCP-capable AI harness drives the engagement; Burp stays the proxy, scanner, and attack engine. Written so the operator — not the model — controls what goes out, what gets written, and where the work resumes.</p>
+
+<div class="toc">
+  <a href="#what">1. What it is</a>
+  <a href="#why">2. Why it exists</a>
+  <a href="#arch">3. Architecture</a>
+  <a href="#safety">4. The six-control safety spine</a>
+  <a href="#state">5. Engagement state model</a>
+  <a href="#phases">6. Six phases (and what's dropped)</a>
+  <a href="#tools">7. Tool surface</a>
+  <a href="#free">8. Free-stack replacements for Burp Pro</a>
+  <a href="#bapps">9. BApp handoff</a>
+  <a href="#pipeline">10. Delivery pipeline</a>
+  <a href="#community">11. Community vs Pro</a>
+  <a href="#faq">12. Anticipated follow-ups</a>
+</div>
+
+<h2 id="what">1. What it is</h2>
+
+<p>burp-conductor is a Python stdio MCP server that sits between an AI harness and PortSwigger's official Burp MCP SSE extension. The harness talks to burp-conductor; burp-conductor talks to Burp on <code>127.0.0.1:9876</code>. Every request crosses a safety layer (<code>safety.py</code>) before it reaches Burp, and every response is capped, sanitized, and quarantine-tagged before it reaches the model.</p>
+
+<p>Alongside the proxy wrapping, the plugin adds three things the raw Burp MCP does not have:</p>
+
+<ul>
+  <li><strong>Engagement state.</strong> <code>reports/&lt;slug&gt;/engagement.yaml</code> is the source of truth — scope, auth, phase status, verify queue, findings index. A fresh session rehydrates from it with <code>/pentest-resume</code>.</li>
+  <li><strong>A six-phase workflow.</strong> recon → auth → access → inject → roundout → report. Each phase is a slash-command skill that reads engagement.yaml, enforces its prereqs, and writes back on checkpoint.</li>
+  <li><strong>A free-stack replacement</strong> for Burp Pro's Crawl / Active Scanner / Collaborator — Katana, Nuclei (fast + headless + authenticated), interactsh, and an in-repo <code>diff_fuzz.py</code> that stands in for Backslash-Powered Scanner.</li>
+</ul>
+
+<div class="callout">
+  <strong>One-sentence pitch:</strong> "Burp MCP is a protocol; burp-conductor is the discipline — scope, HITL, state, and a repeatable six-phase workflow around it."
+</div>
+
+<h2 id="why">2. Why it exists</h2>
+
+<p>Three problems the raw PortSwigger extension does not solve, each of which would otherwise fall to the operator remembering to do the right thing on every call.</p>
+
+<h3>2.1 Raw Burp MCP has no safety</h3>
+<p>The official server exposes 26 tools that let a model fire HTTP, queue Intruder attacks, and read proxy history. None of them check scope, none of them gate on human approval, none of them scrub auth from logs, and none of them cap or quarantine responses that come back carrying prompt-injection payloads. A pentest harness that fires at an out-of-scope host is a billable incident; burp-conductor makes that structurally impossible.</p>
+
+<h3>2.2 Burp Community has no persistence</h3>
+<p>Burp Community (free edition) does not save project state. Close the window, lose the proxy history, the Repeater tabs, the Intruder attacks, the scanner issues. An engagement that runs across three days on Community would normally mean starting fresh three times. burp-conductor moves the engagement memory out of Burp and into <code>engagement.yaml</code> + per-finding markdown + daily JSONL logs, all on disk under <code>reports/&lt;slug&gt;/</code>. Burp becomes a stateless execution engine.</p>
+
+<h3>2.3 A pentest is not a chatbot turn</h3>
+<p>Recon is not injection, and injection is not reporting. Each phase has its own tools, its own HITL posture, its own prereqs. The six-phase skills give the harness a workflow to follow instead of a toolbox to flail inside — the roadmap box prints on every anchor moment so the operator (and the model) always know where they are.</p>
+
+<h2 id="arch">3. Architecture</h2>
+
+<div class="tbl-wrap">
+<pre class="diagram">
+          AI harness (Claude Code / Codex / Cline / Cursor / …)
+                                │
+                                │ stdio MCP
+                                ▼
+            ┌───────────────────────────────────────────┐
+            │  burp-conductor  (this plugin)            │
+            │  ─────────────────────────────────        │
+            │   server.py       stdio FastMCP server    │
+            │   safety.py       6-control spine         │
+            │   persist.py      engagement.yaml I/O     │
+            │   tools/          diff_fuzz.py, helpers   │
+            │   .claude/        skills + commands       │
+            │   reports/&lt;slug&gt;/ findings · logs · state │
+            └───────────────┬───────────────────────────┘
+                            │ stdio → http/sse bridge
+                            ▼
+            ┌───────────────────────────────────────────┐
+            │  PortSwigger Burp MCP extension           │
+            │  (SSE server on 127.0.0.1:9876)           │
+            │  26 upstream tools                        │
+            └───────────────┬───────────────────────────┘
+                            │
+                            ▼ proxy / scanner / intruder
+                      target web app
+
+          Side channels (invoked by phase skills via Bash,
+          not through MCP — they are not BApps):
+            katana          crawl + headless-crawl
+            nuclei          fast scan + headless scan + auth scan
+            interactsh      OOB canary (SSRF, blind XSS)
+            diff_fuzz.py    novel-injection probe (BPS stand-in)
+</pre>
+</div>
+
+<h3>Request lifecycle — a single <code>http_get</code> call</h3>
+
+<pre class="diagram">
+harness calls mcp__burp__http_get("https://app.target.test/api/v1/users")
+      │
+      ▼
+server.http_get
+      │
+      ├── safety.check_in_scope(url)             (1) scope IN
+      │        host ∉ SCOPE_HOSTS → SafetyBlock
+      │
+      ├── build raw HTTP/1.1 request string
+      │
+      ├── safety.inject_identity_into_raw(raw)   (6) identity header
+      │        inserts: X-Pentest-ID: Otoi/juice-shop/2026-11-18
+      │
+      ├── forward to upstream send_http1_request (via SSE bridge)
+      │
+      ├── receive response bytes
+      │
+      ├── safety.spotlight_wrap(body)            (2+3) cap + sanitize + quarantine
+      │        cap  8 KB
+      │        scan for prompt-injection markers → quarantine="true"
+      │        wrap  &lt;untrusted-tool-output source="burp" …&gt;
+      │
+      └── return wrapped bytes to harness
+</pre>
+
+<h2 id="safety">4. The six-control safety spine</h2>
+
+<p>All six controls live in <code>safety.py</code> and are enforced by <code>server.py</code> on every tool call. They are not configurable per-call; they are structural.</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>#</th><th>Control</th><th>Where enforced</th><th>What it prevents</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><strong>Scope-in</strong></td><td><code>check_in_scope()</code> on every tool that takes a URL</td><td>Firing at a host not in <code>SCOPE_HOSTS</code>. Rejects before upstream call.</td></tr>
+<tr><td>2</td><td><strong>HITL gate</strong></td><td><code>HITL_PER_CALL</code> / <code>HITL_PER_PHASE</code>; skills announce before firing</td><td>Autonomous active traffic. Per-call for Repeater / Intruder / raw HTTP sends. Per-phase for scanner and batch replay.</td></tr>
+<tr><td>3</td><td><strong>Response cap + quarantine</strong></td><td><code>spotlight_wrap()</code> on every returned body</td><td>Prompt-injection from the target bleeding into model context. Caps at 8 KB, wraps in <code>&lt;untrusted-tool-output&gt;</code>, tags <code>quarantine="true"</code> on hits like "ignore all previous instructions".</td></tr>
+<tr><td>4</td><td><strong>Report confinement</strong></td><td><code>confine_report_path()</code> on every write</td><td>Path traversal out of <code>reports/</code>. Any resolved path that escapes <code>REPORTS_ROOT</code> is rejected.</td></tr>
+<tr><td>5</td><td><strong>Auth scrubbing</strong></td><td><code>log_request</code> before JSONL append</td><td>Live tokens / cookies written to disk. Strips <code>Authorization</code>, <code>Cookie</code>, <code>Set-Cookie</code>, <code>X-API-Key</code>, <code>X-Auth-Token</code>, <code>Proxy-Authorization</code>.</td></tr>
+<tr><td>6</td><td><strong>Identity header</strong></td><td><code>inject_identity_into_raw()</code> on every outbound upstream call</td><td>Our traffic reading as a genuine attack to the client's blue team. Injects a client-whitelisted header (default <code>X-Pentest-ID</code>) so SIEM / WAF rules can filter us out. Value convention <code>&lt;company&gt;/&lt;slug&gt;/&lt;yyyy-mm-dd&gt;</code>.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <strong>Identity header applies to standalone tools too.</strong> Nuclei, Katana, and diff_fuzz run via Bash, not MCP, so <code>inject_identity_into_raw</code> does not touch them. Phase skills must pass the same value via <code>-H</code> / <code>--header</code>. <code>engagement.yaml</code> is the single source of truth — if the value changes mid-engagement, change it there and reload.
+</div>
+
+<h3>HITL tiers — what each means in practice</h3>
+
+<ul>
+  <li><strong>Per-call HITL.</strong> Announce tool + target + payload shape. Wait for explicit "go". Every single invocation. Applies to <code>send_http1_request</code>, <code>send_http2_request</code>, <code>create_repeater_tab</code>, <code>send_to_intruder</code>.</li>
+  <li><strong>Per-phase HITL.</strong> Announce once at phase start (scope, mode, rate, templates). Wait for go. Phase then runs without re-prompting unless something unusual happens. Applies to the scanner trigger (name TBD per <code>list_upstream_tools</code>) and local batch-replay.</li>
+  <li><strong>Passive, uncounted.</strong> <code>http_get</code> and <code>get_proxy_history</code> are scope-checked but not HITL-gated; they fetch without sending new attack traffic.</li>
+</ul>
+
+<h2 id="state">5. Engagement state model</h2>
+
+<p><code>reports/&lt;slug&gt;/engagement.yaml</code> is the single source of truth for one engagement. Human-editable. Every phase skill reads it on start and writes back on checkpoint. The five top-level blocks:</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Block</th><th>Purpose</th><th>Who writes</th></tr></thead>
+<tbody>
+<tr><td><code>scope</code></td><td>Hosts + free-form notes. Loaded into <code>SCOPE_HOSTS</code> on <code>start_engagement</code> and <code>read_engagement</code>.</td><td><code>/pentest-start</code>, user edits for mid-engagement scope changes</td></tr>
+<tr><td><code>window</code></td><td>Start/end dates of the test window.</td><td><code>/pentest-start</code></td></tr>
+<tr><td><code>identity</code></td><td>Header name + value + client-agreement date. Loaded into <code>IDENTITY_HEADER_*</code> on <code>read_engagement</code>.</td><td>User (prompted by <code>/pentest-start</code> step 3a)</td></tr>
+<tr><td><code>auth</code></td><td>Captured session material — method, cookie-jar path, notes. Reused by access/inject/roundout.</td><td><code>/pentest-auth</code> on close</td></tr>
+<tr><td><code>phases</code></td><td>Status + checkpoint + artifact list per phase. Drives the roadmap box and the resume logic.</td><td>Every phase skill on <code>advance_phase</code></td></tr>
+<tr><td><code>verify_queue</code></td><td>Items surfaced by recon/crawl/baseline that need targeted follow-up. Drained during inject.</td><td>recon / crawl / baseline writers; inject drainer</td></tr>
+<tr><td><code>findings_written</code></td><td>Flat index of per-finding markdown files for the report assembler.</td><td><code>save_finding</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>The resume pattern</h3>
+<pre><code>/pentest-resume juice-shop
+      │
+      ▼
+read_engagement("juice-shop")
+      │
+      ├── safety.load_scope(hosts)              ← scope back in memory
+      ├── safety.load_identity(name, value)     ← identity header back in memory
+      ├── print roadmap box with current phase ticks
+      └── suggest next skill based on phase statuses</code></pre>
+<p>A session that lost its context picks up exactly where the last one stopped. No ad-hoc memory, no "where were we." The file is the memory.</p>
+
+<h2 id="phases">6. Six phases (and what's dropped)</h2>
+
+<p>PTES ships seven phases; OWASP WSTG ships eleven categories. burp-conductor ships six. The reduction is deliberate — a web-app engagement does not need post-exploitation, and pre-engagement is email work, not harness work.</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Phase</th><th>Skill</th><th>What it does</th><th>HITL posture</th></tr></thead>
+<tbody>
+<tr><td>recon</td><td><code>/pentest-recon</code></td><td>Endpoints, hidden params, auth boundary, threat model. Passive only — no active probes.</td><td>None; no attack traffic fires.</td></tr>
+<tr><td>auth</td><td><code>/pentest-auth</code></td><td>Login rate-limit, user enumeration, session fixation, JWT weakness, reset/MFA flow.</td><td>Per-call on every send / repeater / intruder.</td></tr>
+<tr><td>access</td><td><code>/pentest-access</code></td><td>IDOR (object-level), vertical priv-esc (function-level), business-logic abuse.</td><td>Per-call. One object at a time, no mass sweeps.</td></tr>
+<tr><td>inject</td><td><code>/pentest-inject</code></td><td>SQLi, XSS, SSRF, method/content-type tampering. Drives scanner pass on <code>verify_queue</code>.</td><td>Per-phase on scanner. Per-call on every manual payload. interactsh canary before any SSRF.</td></tr>
+<tr><td>roundout</td><td><code>/pentest-roundout</code></td><td>OWASP Top-10 sweep — headers, TLS, SCA, crypto, design, integrity, logging, races. Safety net for everything the earlier phases missed.</td><td>Passive reads free. Active probes gated per-call.</td></tr>
+<tr><td>report</td><td><code>/pentest-report</code></td><td>Assemble EN draft from per-finding markdown, hand off to Otoi-san for JP translation, prepare debrief.</td><td>No upstream fires. Read, assemble, write only.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>What we dropped and why</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>PTES step</th><th>Status</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>Pre-engagement / scoping</td><td>Folded into <code>/pentest-start</code> + <code>SCOPE.md</code></td><td>Real work but not harness work — email + signed SOW. The technical phases consume its outputs (scope hosts, accounts, window).</td></tr>
+<tr><td>Threat modeling</td><td>Folded into recon</td><td>Its output (asset list + abuse cases + trust boundaries) is what recon already produces.</td></tr>
+<tr><td>Exploitation</td><td>Dropped</td><td>Red-team deliverable, not web-app deliverable. Clients buy "find the bug, prove it exists, document the fix" — not chained pivots.</td></tr>
+<tr><td>Post-exploitation</td><td>Dropped</td><td>Same reason. A <code>/pentest-exploit</code> phase would mostly be a checklist of destructive actions HITL already gates.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Genuinely missing — add on signal, not reflex</h3>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Gap</th><th>When it bites</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>Retest / remediation verification</td><td>Client fixes findings → asks "confirm the fix landed"</td><td><code>/pentest-retest &lt;slug&gt;</code> — re-run the affected check, diff old vs new evidence. First to add when a client actually asks.</td></tr>
+<tr><td>Exploit chaining</td><td>Two mediums chain to a critical (open redirect + OAuth state reuse → ATO)</td><td>No new phase. Add a <code>chains:</code> list in engagement.yaml + a hunt note in <code>/pentest-roundout</code>.</td></tr>
+<tr><td>Business-logic as a first-class phase</td><td>Checkout race, coupon replay, workflow skip</td><td>Currently split across access and inject. Pull out to <code>/pentest-logic</code> only for products whose whole value is workflow (banking, booking, checkout).</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>Decision rule:</strong> don't add a phase because a model lists it. Add a phase when a real engagement surfaces work the existing six can't absorb.</p>
+
+<h2 id="tools">7. Tool surface</h2>
+
+<h3>7.1 Upstream — the 26-tool Burp MCP surface</h3>
+<p>Re-verified 2026-11-18 against <code>PortSwigger/mcp-server</code> source (<code>Tools.kt</code>, <code>serialization.kt</code>, <code>HistoryItemJson.kt</code>). Categories:</p>
+<ul>
+  <li><strong>HTTP send</strong> — <code>send_http1_request</code>, <code>send_http2_request</code></li>
+  <li><strong>Repeater</strong> — <code>create_repeater_tab</code></li>
+  <li><strong>Intruder</strong> — <code>send_to_intruder</code></li>
+  <li><strong>Proxy history</strong> — <code>get_proxy_http_history_regex</code> (per-item capped at 5000 chars by <code>MAX_HISTORY_ITEM_LENGTH</code>, no flag to raise)</li>
+  <li><strong>Scanner</strong> — read + trigger (trigger name unverified; confirm via <code>list_upstream_tools</code>)</li>
+  <li><strong>Collaborator</strong> — <code>GenerateCollaboratorPayload</code> + poller</li>
+  <li><strong>Organizer / Encoders / Config / Task engine / Intercept toggle</strong></li>
+</ul>
+
+<h3>7.2 Our wrappers — exposed to the harness</h3>
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Tool</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td><code>mcp__burp__http_get(url)</code></td><td>GET via Burp proxy, scope-checked, 8 KB cap, spotlight-wrapped.</td></tr>
+<tr><td><code>mcp__burp__log_request(...)</code></td><td>Append to daily JSONL. Auth headers auto-redacted.</td></tr>
+<tr><td><code>mcp__burp__save_finding(slug, severity, title, body)</code></td><td>Write <code>reports/YYYY-MM-DD-&lt;sev&gt;-&lt;slug&gt;.md</code>.</td></tr>
+<tr><td><code>mcp__burp__write_report(filename, content)</code></td><td>Arbitrary write under <code>reports/</code>.</td></tr>
+<tr><td><code>mcp__burp__list_upstream_tools()</code></td><td>Read the live Burp extension's tool list — use to verify names.</td></tr>
+<tr><td><code>mcp__burp__checkpoint_history(slug, regex)</code></td><td>Snapshot Burp proxy history to <code>reports/&lt;slug&gt;/replay-&lt;date&gt;.jsonl</code>. Paginates, scope-filters, scrubs auth, flags 5000-char truncations.</td></tr>
+<tr><td><code>mcp__burp__replay_history(slug, file, auth_headers_json, limit)</code></td><td>Re-fire checkpointed requests on a fresh Burp session. Rewrites auth from a fresh login. Skips truncated items. Batch-HITL (announce once).</td></tr>
+<tr><td><code>start_engagement</code> / <code>read_engagement</code> / <code>advance_phase</code> / <code>next_phase</code> / <code>list_engagements</code></td><td>State management over <code>engagement.yaml</code>.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="free">8. Free-stack replacements for Burp Pro</h2>
+
+<p>Burp Community does not ship Crawl, Active Scanner, or Collaborator. We replace each with a ProjectDiscovery CLI, invoked from phase skills via <code>Bash</code> — not through MCP (these are not BApps).</p>
+
+<p><strong>Goal: match Pro Scanner <em>depth</em>, not just breadth.</strong> Pro's edge is (1) headless-Chrome DOM execution and (2) stateful session handling. The free stack closes both with a clean division of labor.</p>
+
+<div class="callout">
+  <strong>Katana crawls, Nuclei scans.</strong> Katana <code>-headless</code> executes JS in real Chrome to <em>discover</em> SPA routes — it never scans. Nuclei <code>-headless</code> runs client-side templates (DOM-XSS, prototype pollution, postMessage) against the URL list it is handed — it never crawls. We need both because Nuclei can only scan URLs it already has, and SPA routes only exist after a browser renders the page.
+</div>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Pro feature</th><th>Free alternative</th><th>Phase</th></tr></thead>
+<tbody>
+<tr><td>Crawl (headless-browser crawler + sitemap)</td><td><strong>Katana</strong> — fast pass + <code>-headless -system-chrome</code> deep pass</td><td>recon → <code>verify_queue</code></td></tr>
+<tr><td>Active Scanner (fast HTTP)</td><td><strong>Nuclei</strong> + community templates</td><td>inject</td></tr>
+<tr><td>Active Scanner (DOM / client-side)</td><td><strong>Nuclei <code>-headless</code></strong>, <code>headless/</code> templates</td><td>inject</td></tr>
+<tr><td>Authenticated scan</td><td><strong>Nuclei <code>-sf</code></strong> (secret-file v3.2+) or <code>-H</code> for static tokens</td><td>inject</td></tr>
+<tr><td>Collaborator (OOB)</td><td><strong>interactsh</strong> — <code>interact.sh</code> or self-hosted</td><td>inject (SSRF, blind XSS)</td></tr>
+<tr><td>Backslash-Powered Scanner</td><td><strong><code>tools/diff_fuzz.py</code></strong> (in-repo)</td><td>inject — novel SSTI / EL / custom-parser escapes</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Why diff_fuzz is in-repo</h3>
+<p>Backslash-Powered Scanner is Apache-2.0, but it hooks <code>IScannerCheck</code>, which is Pro-gated. The open-source extension cannot run in Community. <code>diff_fuzz.py</code> is our stand-in: baseline a parameter, mutate it with probe strings, diff responses, flag divergence. Closes the last Pro-Scanner-depth gap.</p>
+
+<h3>Two-pass scan pattern (how we reach Pro depth)</h3>
+<ol>
+  <li><strong>Pass 1 — fast HTTP.</strong> Katana default → Nuclei default. 80% of CVE / misconfig / exposed-panel surface in minutes.</li>
+  <li><strong>Pass 2 — headless.</strong> Katana <code>-headless</code> to discover JS-rendered routes → feed into <code>verify_queue</code> → Nuclei <code>-headless</code> with <code>headless/</code> templates on the combined set. Catches DOM-XSS, client-side prototype pollution.</li>
+  <li><strong>Pass 3 — authenticated replay.</strong> Both passes re-run with session material from <code>/pentest-auth</code> (bearer via <code>-H</code> or flow via <code>-sf</code>). Hits post-login attack surface.</li>
+  <li><strong>Manual deep-dive.</strong> Anything "tentative" or anything a template can't model → MCP <code>send_http1_request</code> / <code>create_repeater_tab</code> under HITL for byte-level verification.</li>
+</ol>
+
+<h3>Rules of use (same as MCP tools)</h3>
+<ul>
+  <li><strong>Scope first.</strong> Skill filters target list through <code>safety.load_scope</code> before invoking.</li>
+  <li><strong>HITL per invocation.</strong> State pass type, templates, severity, rate, targets. Headless is high-cost — call out <code>-c</code> and <code>-rl</code> explicitly.</li>
+  <li><strong>Output to scratchpad</strong>, not <code>reports/</code>. Skill reads, filters, then seeds <code>verify_queue</code> or files findings.</li>
+  <li><strong>Treat output as untrusted.</strong> URLs from target, response snippets, DOM strings. Spotlight-wrap or JSON-parse.</li>
+  <li><strong>interactsh canary names in the HITL announcement.</strong> Never point SSRF at a live internal target without explicit per-call approval.</li>
+  <li><strong>Auth material never in argv.</strong> Write to scratch file (<code>chmod 600</code>), reference by path.</li>
+</ul>
+
+<h2 id="bapps">9. BApp handoff</h2>
+
+<p>BApps run inside Burp's GUI. MCP cannot invoke them. Decide per extension: reimplement in MCP, run in GUI side-by-side, or skip.</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Extension</th><th>Status</th><th>Phase</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td><strong>Turbo Intruder</strong></td><td><span class="pill crit">Required</span></td><td>auth, access, roundout</td><td>Single-packet HTTP/2 race. <code>SendHttp*Request</code> is sequential — cannot reimplement. Catches TOCTOU, coupon replay, MFA race.</td></tr>
+<tr><td><strong>Param Miner</strong></td><td><span class="pill crit">Required</span></td><td>recon</td><td>Hidden header + parameter discovery. Catches cache-key injection, host-header routing, backend param smuggling.</td></tr>
+<tr><td><strong>Autorize</strong></td><td><span class="pill">Useful</span></td><td>access</td><td>Passive swarm-replay diff for horizontal access control. Complementary to <code>/pentest-access</code>.</td></tr>
+<tr><td><strong>Software Vulnerability Scanner / Retire.js</strong></td><td><span class="pill">Useful</span></td><td>roundout</td><td>A06 Vulnerable Components. Passive — reads banners + JS lib versions.</td></tr>
+<tr><td><strong>JWT Editor · Hackvertor · Logger++</strong></td><td><span class="pill ok">Skip</span></td><td>—</td><td>All reimplementable with existing MCP tools or already covered by our JSONL log.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Workflow when a skill wants a GUI-only extension</h3>
+<ol>
+  <li>Skill states tool pick + reasoning: "race-shaped endpoint — suggest Turbo Intruder, single-packet, 30 reqs."</li>
+  <li>HITL gate: wait for go.</li>
+  <li>User right-clicks the request in Burp → sends to extension → runs → screenshots.</li>
+  <li>Back in MCP: <code>save_finding</code> with screenshot path and a one-line result.</li>
+  <li>Re-ingest any new traffic via <code>GetProxyHttpHistoryRegex</code> if follow-up probing is needed.</li>
+</ol>
+
+<div class="callout crit">
+  <strong>Do not invent MCP tools for these extensions.</strong> No <code>autorize_scan</code>, no <code>turbo_race</code>. They do not exist. If a skill needs an extension capability, it goes through the GUI handoff.
+</div>
+
+<h2 id="pipeline">10. Delivery pipeline</h2>
+
+<pre class="diagram">
+reports/&lt;slug&gt;/
+  engagement.yaml                        (state)
+  log-YYYY-MM-DD.jsonl                   (daily traffic log, auth-scrubbed)
+  YYYY-MM-DD-&lt;sev&gt;-&lt;slug&gt;.md             (one per finding)
+          │
+          │ /pentest-report
+          ▼
+  report-draft-en.md                     (EN assembly from per-finding md)
+          │
+          ▼
+  Otoi-san     →   JP translation (です/ます, 鈴木さん not 様)
+          │
+          ▼
+  client delivery
+          │
+          ▼
+  debrief
+</pre>
+
+<h3>Finding template</h3>
+<p>Fixed section order: Summary → Steps to reproduce → Evidence (raw req/resp) → <strong>Impact (two-layer: Technical + Business)</strong> → Remediation → References. Impact is always two-layer so Otoi-san's non-technical JP stakeholders read the risk cold without a technical translator.</p>
+
+<h2 id="community">11. Community vs Pro</h2>
+
+<p>The harness closes most of the gap but not all of it. What we match, what we don't, what we deliberately accept losing.</p>
+
+<div class="tbl-wrap">
+<table>
+<thead><tr><th>Capability</th><th>Pro</th><th>Community + harness</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>Project persistence</td><td>Native .burp file</td><td>engagement.yaml + findings md + JSONL logs</td><td><span class="pill ok">Matched</span> — Pro saves tool memory, we save engagement memory.</td></tr>
+<tr><td>Crawl</td><td>Headless-browser crawler</td><td>Katana fast + headless</td><td><span class="pill ok">Matched</span></td></tr>
+<tr><td>Active Scanner (HTTP)</td><td>Pro Scanner</td><td>Nuclei + community templates</td><td><span class="pill ok">Matched (coverage)</span></td></tr>
+<tr><td>Active Scanner (DOM)</td><td>Pro Scanner headless</td><td>Nuclei <code>-headless</code></td><td><span class="pill ok">Matched</span></td></tr>
+<tr><td>Session Handling Rules</td><td>Pro macro recorder</td><td><code>replay_history</code> + fresh auth injection</td><td><span class="pill ok">Matched</span></td></tr>
+<tr><td>Collaborator</td><td>Private server</td><td>interactsh public or self-hosted</td><td><span class="pill ok">Matched</span></td></tr>
+<tr><td>BPS (novel injection)</td><td>Pro BApp</td><td><code>tools/diff_fuzz.py</code></td><td><span class="pill warn">Partial</span> — stand-in; not as deep as Kettle's original.</td></tr>
+<tr><td>Scanner issue history UI</td><td>Click-through tree, confidence-tracked</td><td>Nuclei JSONL + <code>save_finding</code></td><td><span class="pill warn">Accepted loss</span> — functional parity, UX loss.</td></tr>
+<tr><td>Sequencer</td><td>GUI (ships in Community)</td><td>Capture ≥5000 tokens via <code>send_http1_request</code> loop, hand off to Sequencer GUI</td><td><span class="pill ok">Matched (GUI handoff)</span></td></tr>
+<tr><td>HTTP-proxy ceiling</td><td>Burp proxy</td><td>Burp proxy</td><td>Universal — Pro doesn't help here either.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="faq">12. Anticipated follow-ups</h2>
+
+<div class="qa"><div class="q">Why MCP and not a Burp extension written in Java?</div>
+A Java BApp is locked to the GUI, locked to whoever is sitting at the keyboard, and can't be driven by an AI harness. MCP is harness-agnostic (Claude Code, Codex, Cline, Cursor all speak it) and leaves Burp as the stateless engine. It also means the safety spine is in Python, where I can read and audit it, not in a jar.</div>
+
+<div class="qa"><div class="q">Why not just use Burp Pro?</div>
+Three reasons. First, portfolio build — I need to show I can reason about the safety and workflow problem, not just buy the tool that solves it. Second, the harness-driven workflow needs to work anywhere; Pro licensing is per-seat. Third, Pro doesn't solve the model-safety problem — scope enforcement, HITL, prompt-injection quarantine, auth scrubbing in logs. That layer exists whether you're on Community or Pro.</div>
+
+<div class="qa"><div class="q">What stops the model from going out of scope?</div>
+<code>safety.check_in_scope()</code> runs on every tool call that takes a URL, before the call reaches upstream. It parses the hostname and tests set membership against <code>SCOPE_HOSTS</code>. A miss raises <code>SafetyBlock</code> and the call never leaves the plugin. <code>SCOPE_HOSTS</code> is loaded from <code>engagement.yaml</code> on <code>start_engagement</code> and <code>read_engagement</code> — it is not something the model can set or widen.</div>
+
+<div class="qa"><div class="q">What happens if a response contains "ignore all previous instructions"?</div>
+<code>spotlight_wrap()</code> scans every response body against five regex patterns for prompt-injection markers. On a hit it wraps the body in <code>&lt;untrusted-tool-output source="burp" quarantine="true"&gt;</code> and returns it. The skills (and the CLAUDE.md system prompt) tell the model to surface the tag, stop, and not act on the content. The tag is the signal; the model doesn't decide quarantine.</div>
+
+<div class="qa"><div class="q">Why 8 KB cap on responses?</div>
+Context budget. A pentest surfaces many responses per phase — if each one came back at 50 KB the window would be full after five calls. 8 KB is enough for the first screen of headers + body, which is what the model needs to decide the next step. The full body is still in Burp's proxy history; <code>get_proxy_history</code> can retrieve the untruncated item (subject to the 5000-char-per-item upstream cap on <code>get_proxy_http_history_regex</code>).</div>
+
+<div class="qa"><div class="q">What's the identity header for?</div>
+When we pentest a client, our traffic looks identical to a real attack. The client's blue team (SOC + SIEM + WAF) will see our <code>UNION SELECT</code>s and our directory traversals and page someone. The agreed solution is a unique header on every request — e.g. <code>X-Pentest-ID: Otoi/juice-shop/2026-11-18</code> — that the blue team whitelists before the window opens. Their detections filter on that header: real attackers don't send it, we always do. HackerOne and Bugcrowd have the same convention (<code>X-HackerOne-Research</code>, <code>X-Bugcrowd-Ninja</code>). Loaded from <code>engagement.yaml</code>, injected server-side by <code>safety.inject_identity_into_raw()</code>, mirrored to standalone CLI tools via <code>-H</code>.</div>
+
+<div class="qa"><div class="q">Why six phases and not eleven?</div>
+Eleven is OWASP WSTG's category count — it's a checklist, not a workflow. PTES has seven, and we drop two of those (exploitation, post-exploitation) because web-app clients buy findings, not pivots. The six phases are the shape a real engagement actually takes. More phases mean more handoffs, more state, more skill files to maintain. Fewer phases mean the model does more open-ended work per skill. Six is the point where each phase has a clear prereq, a clear deliverable, and a clear HITL posture.</div>
+
+<div class="qa"><div class="q">What's in engagement.yaml that isn't in Burp's project file?</div>
+Three things. <strong>Phase state</strong> — Burp doesn't know what a phase is. <strong>Verify queue</strong> — items surfaced by scanner or crawl that need targeted follow-up with slug, type, severity hint, status. Burp's issue tree isn't a workflow queue. <strong>Findings index</strong> — the flat list of per-finding markdown files that the report assembler consumes. Burp's reporting is on-demand HTML/XML export, not a live index.</div>
+
+<div class="qa"><div class="q">Why is Juice Shop the dry-run target?</div>
+It's localhost (no scope risk), it's deliberately broken across every OWASP category (every phase has something to find), and it's the de facto reference target in web-app security training. Running the full six-phase sweep on Juice Shop validates that each phase fires, each skill checkpoints, each finding files, and the report assembles — before we point it at a real client.</div>
+
+<div class="qa"><div class="q">What happens when Burp Community restarts mid-engagement?</div>
+Burp forgets its proxy history, Repeater tabs, Intruder attacks, scanner issues. The harness doesn't. <code>engagement.yaml</code>, the per-finding markdown, and the daily JSONL log all survive. <code>/pentest-resume &lt;slug&gt;</code> reads engagement.yaml, reloads scope + identity header, prints the roadmap box with current ticks, and suggests the next skill. Any request we need to replay against a fresh Burp session goes through <code>checkpoint_history</code> → <code>replay_history</code> with a fresh login's auth material injected.</div>
+
+<div class="qa"><div class="q">What's the hardest thing this project is trying to prove?</div>
+That you can drive active security testing from an AI harness without giving the model authority over what gets fired. Scope, HITL, quarantine, confinement, auth-scrub, identity header — all six are structural constraints the model cannot route around, not instructions it is asked to follow. The model is a planner and a reasoner; the operator is the authority. If that layering breaks down anywhere, the whole premise fails. The six controls are the whole value proposition.</div>
+
+<footer>
+burp-conductor · D:\Work\burp-mcp\ · reference doc generated 2026-11-21.
+Pair reference: <code>research/raw-vs-harness-walkthrough.html</code> (harness design walkthrough).
+</footer>
