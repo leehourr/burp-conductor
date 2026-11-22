@@ -12,21 +12,7 @@ interaction, and novel-injection discovery are driven by a free stack of
 ProjectDiscovery CLIs plus an in-repo differential fuzzer, invoked under
 the same safety spine via `Bash` calls from the phase skills.
 
-```
-┌─────────────────────── burp-conductor ────────────────────────┐
-│  safety.py  — scope / HITL / quarantine / confinement / scrub │
-│  persist.py — engagement.yaml state, JSONL log, findings      │
-│  .claude/commands/pentest-*.md — 6-phase engagement skills    │
-└───────────────┬───────────────────────────────────────────────┘
-                │
-     ┌──────────┴───────────┐
-     ▼                      ▼
-┌──────────────┐    ┌───────────────────────────────────────┐
-│  Burp MCP    │    │  Free stack (invoked via Bash)        │
-│  (26 tools)  │    │  katana · nuclei · interactsh         │
-│  HTTP 9876   │    │  tools/diff_fuzz.py (BPS stand-in)    │
-└──────────────┘    └───────────────────────────────────────┘
-```
+![burp-conductor engagement lifecycle](assets/architecture.svg)
 
 Why both: the Burp MCP alone exposes 26 tools but Burp **Community** ships
 no Crawl, no Active Scanner, and no Collaborator. The free stack closes those

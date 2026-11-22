@@ -2,3 +2,6 @@
 # Mark them as documentation so GitHub Linguist doesn't count them in the language bar.
 research/*.html linguist-documentation
 research/**/*.html linguist-documentation
+
+# SVG diagrams in the README are documentation, not source.
+assets/*.svg linguist-documentation

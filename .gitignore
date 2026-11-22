@@ -14,3 +14,6 @@ reports/
 
 # Walkthroughs, source citations, reference HTML — local notes, not shipped.
 research/
+
+# Local HTML scratchpads — not tracked (keeps GitHub language bar clean).
+docs/
