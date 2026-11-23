@@ -4,6 +4,15 @@ An **MCP plugin** (server + slash-command skills + hooks) that conducts a
 full web-app engagement from any MCP-capable AI harness — Claude Code,
 Codex, Cline, Cursor, or any other MCP client.
 
+> **Safe probes only.** Every phase skill is written to **verify, not exploit** —
+> single-request checks, canary-based SSRF (interactsh), reflected-XSS markers
+> that don't execute privileged actions, SQLi probes that read error state
+> rather than drop or exfiltrate data, auth tests that stop at proof-of-access.
+> No destructive payloads, no data exfiltration, no persistence, no lateral
+> movement. Deliverable is "find the bug, prove it exists, document the fix" —
+> not red-team post-exploitation. The HITL gate and `safety.py` enforce this
+> at the tool-call layer; the skills enforce it at the methodology layer.
+
 burp-conductor is **not just a Burp MCP wrapper**. The proxy, scanner, and
 Repeater/Intruder work is delegated to PortSwigger's official Burp MCP
 extension (streamable HTTP MCP at `http://127.0.0.1:9876/mcp`; SSE only as

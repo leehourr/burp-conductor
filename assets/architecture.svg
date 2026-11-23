@@ -68,44 +68,44 @@
     <rect x="106" y="388" width="90" height="30" rx="3" fill="none" class="soft" stroke-width="1.2"/>
     <text x="151" y="409" font-size="17" letter-spacing="1.4" class="muted" text-anchor="middle">PHASE 0</text>
     <text x="195" y="456" font-size="32" font-weight="600" class="ink" text-anchor="middle">Scoping</text>
-    <text x="195" y="488" font-size="18" class="muted" text-anchor="middle">SCOPE.md · engagement.yaml</text>
+    <text x="195" y="488" font-size="15" class="muted" text-anchor="middle">SCOPE.md · engagement.yaml</text>
 
     <rect x="313" y="372" width="210" height="136" rx="8" fill="none" class="soft" stroke-width="1.8"/>
     <rect x="329" y="388" width="90" height="30" rx="3" fill="none" class="soft" stroke-width="1.2"/>
     <text x="374" y="409" font-size="17" letter-spacing="1.4" class="muted" text-anchor="middle">PHASE 1</text>
     <text x="418" y="456" font-size="32" font-weight="600" class="ink" text-anchor="middle">Recon</text>
-    <text x="418" y="488" font-size="18" class="muted" text-anchor="middle">surface map · passive</text>
+    <text x="418" y="488" font-size="15" class="muted" text-anchor="middle">surface map · passive</text>
 
     <rect x="536" y="372" width="210" height="136" rx="8" fill="none" class="soft" stroke-width="1.8"/>
     <rect x="552" y="388" width="90" height="30" rx="3" fill="none" class="soft" stroke-width="1.2"/>
     <text x="597" y="409" font-size="17" letter-spacing="1.4" class="muted" text-anchor="middle">PHASE 2</text>
     <text x="641" y="456" font-size="32" font-weight="600" class="ink" text-anchor="middle">Auth</text>
-    <text x="641" y="488" font-size="18" class="muted" text-anchor="middle">tokens · rate-limit · jwt</text>
+    <text x="641" y="488" font-size="15" class="muted" text-anchor="middle">tokens · rate-limit · jwt</text>
 
     <rect x="759" y="372" width="210" height="136" rx="8" fill="none" class="soft" stroke-width="1.8"/>
     <rect x="775" y="388" width="90" height="30" rx="3" fill="none" class="soft" stroke-width="1.2"/>
     <text x="820" y="409" font-size="17" letter-spacing="1.4" class="muted" text-anchor="middle">PHASE 3</text>
     <text x="864" y="456" font-size="32" font-weight="600" class="ink" text-anchor="middle">Access</text>
-    <text x="864" y="488" font-size="18" class="muted" text-anchor="middle">IDOR · priv-esc</text>
+    <text x="864" y="488" font-size="15" class="muted" text-anchor="middle">IDOR · priv-esc</text>
 
     <rect x="982" y="372" width="210" height="136" rx="8" fill="none" class="soft" stroke-width="1.8"/>
     <rect x="998" y="388" width="90" height="30" rx="3" fill="none" class="soft" stroke-width="1.2"/>
     <text x="1043" y="409" font-size="17" letter-spacing="1.4" class="muted" text-anchor="middle">PHASE 4</text>
     <text x="1087" y="456" font-size="32" font-weight="600" class="ink" text-anchor="middle">Inject</text>
-    <text x="1087" y="488" font-size="18" class="muted" text-anchor="middle">SQLi · XSS · SSRF · scan</text>
+    <text x="1087" y="488" font-size="15" class="muted" text-anchor="middle">SQLi · XSS · SSRF · scan</text>
 
     <rect x="1205" y="372" width="245" height="136" rx="8" fill="none" class="soft" stroke-width="1.8"/>
     <rect x="1221" y="388" width="90" height="30" rx="3" fill="none" class="soft" stroke-width="1.2"/>
     <text x="1266" y="409" font-size="17" letter-spacing="1.4" class="muted" text-anchor="middle">PHASE 5</text>
     <text x="1327" y="456" font-size="32" font-weight="600" class="ink" text-anchor="middle">Roundout</text>
-    <text x="1327" y="488" font-size="18" class="muted" text-anchor="middle">OWASP Top 10 sweep</text>
+    <text x="1327" y="488" font-size="15" class="muted" text-anchor="middle">OWASP Top 10 sweep</text>
 
     <!-- Report (focal, blue) -->
     <rect x="1480" y="372" width="240" height="136" rx="8" fill="none" class="accent-stroke" stroke-width="2.8"/>
     <rect x="1496" y="388" width="90" height="30" rx="3" fill="none" class="accent-stroke" stroke-width="1.4"/>
     <text x="1541" y="409" font-size="17" letter-spacing="1.4" class="accent-fill" text-anchor="middle">PHASE 6</text>
     <text x="1600" y="456" font-size="32" font-weight="600" class="accent-fill" text-anchor="middle">Report</text>
-    <text x="1600" y="488" font-size="18" class="muted" text-anchor="middle">EN → Otoi-san → JP</text>
+    <text x="1600" y="488" font-size="15" class="muted" text-anchor="middle">EN → Otoi-san → JP</text>
   </g>
 
   <!-- feeds down to safety spine -->
