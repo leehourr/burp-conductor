@@ -96,15 +96,98 @@ The engagement moves left-to-right through six phases. Each is a slash command
 that reads and writes `reports/<slug>/engagement.yaml` as the single source of
 truth — so a fresh session can resume mid-engagement with `/pentest-resume <slug>`.
 
-| Command | Phase | What it does | Prereq |
-|---------|-------|--------------|--------|
-| `/pentest-start <slug> <client> <hosts>` | 0 · Bootstrap | Create `reports/<slug>/engagement.yaml`, load scope, print RoE and roadmap. No upstream tools fire. | — |
-| `/pentest-recon <slug>` | 1 · Recon | Surface map (endpoints, auth boundary, hidden params, threat model). Katana crawl + Param Miner. Passive only — no active probes. Writes `verify_queue`. | start done |
-| `/pentest-auth <slug>` | 2 · Auth | Login endpoint probes: rate-limit, user enumeration, session handling, JWT weaknesses, reset/MFA flow. HITL on every send. | recon done |
-| `/pentest-access <slug>` | 3 · Access | Horizontal IDOR (object-level), vertical priv-esc (function-level), business-logic abuse. One object at a time, no mass sweeps. | auth done |
-| `/pentest-inject <slug>` | 4 · Inject | SQLi (error + blind), reflected/stored XSS, SSRF via interactsh canary, HTTP method/content-type tamper. Drives the Nuclei scanner pass on `verify_queue`. | access done |
-| `/pentest-roundout <slug>` | 5 · Roundout | OWASP Top 10:2025 sweep for gaps: headers, TLS, SCA (JS libs), deserialization, logging, exception info disclosure. | inject done |
-| `/pentest-report <slug>` | 6 · Report | Assemble EN draft from per-finding markdown, hand off to Otoi-san for JP translation, prepare debrief. No upstream tools fire. | roundout done |
+### 0 · Bootstrap — `/pentest-start <slug> <client> <hosts>`
+
+Create `reports/<slug>/engagement.yaml`, load scope into `safety.py`, print RoE and roadmap.
+
+- **Prereq:** —
+- **Tool set:** file writes only. No upstream tools fire.
+- **Writes:** `engagement.yaml`, `SCOPE.md`
+
+### 1 · Recon — `/pentest-recon <slug>`
+
+Surface map (endpoints, auth boundary, hidden params, threat model). Passive only — no active probes.
+
+- **Prereq:** start done
+- **Tool set:**
+  - `katana` fast crawl (`-d 5 -jc`) → `verify_queue` seed
+  - `katana -headless -system-chrome` second pass for JS-rendered SPA routes
+  - **Param Miner** (BApp, GUI handoff) for hidden headers / cache-key params
+  - Burp proxy history reads via `get_proxy_http_history_regex` for passive endpoint discovery
+- **Writes:** `verify_queue`, threat-model notes in `engagement.yaml`
+
+### 2 · Auth — `/pentest-auth <slug>`
+
+Login endpoint probes: rate-limit, user enumeration, session handling, JWT weaknesses, reset/MFA flow.
+
+- **Prereq:** recon done; `auth_method_hint` populated
+- **Tool set:**
+  - `send_http1_request` for per-request probes (HITL per call)
+  - `create_repeater_tab` for manual re-fire and header tamper
+  - `send_to_intruder` for rate-limit and enumeration (HITL per attack)
+  - `Base64Encode` / `Base64Decode` for JWT header + payload swaps (`alg:none`, RS256→HS256)
+  - `checkpoint_history` + `replay_history` to carry a fresh session across runs
+- **Writes:** findings; session material for downstream phases
+
+### 3 · Access — `/pentest-access <slug>`
+
+Horizontal IDOR (object-level), vertical priv-esc (function-level), business-logic abuse. One object at a time, no mass sweeps.
+
+- **Prereq:** auth done; two valid sessions (for horizontal tests)
+- **Tool set:**
+  - `send_http1_request` with swapped session cookies / bearer tokens (HITL per call)
+  - `create_repeater_tab` for side-by-side user-A / user-B comparison
+  - **Autorize** (BApp, GUI, passive alongside) for swarm-replay diff across live traffic
+- **Writes:** findings
+
+### 4 · Inject — `/pentest-inject <slug>`
+
+SQLi (error + blind), reflected/stored XSS, SSRF via interactsh canary, HTTP method/content-type tamper, novel injection discovery.
+
+- **Prereq:** access done
+- **Tool set:**
+  - `nuclei` fast pass on `verify_queue` (`-severity medium,high,critical`)
+  - `nuclei -headless -t headless/` for DOM-XSS, prototype pollution, postMessage bugs
+  - `nuclei -sf auth.yaml` or `-H` for authenticated replay
+  - `interactsh-client` for SSRF / blind-XSS canary (OOB confirmation)
+  - `tools/diff_fuzz.py` — in-repo Backslash-Powered Scanner stand-in for novel SSTI / expression-language / custom-parser escapes
+  - **Turbo Intruder** (BApp, GUI) for single-packet HTTP/2 race attacks (TOCTOU, coupon replay, MFA race)
+  - `send_http1_request` / `create_repeater_tab` for byte-level verification of anything Nuclei flags "tentative"
+- **Writes:** findings
+
+### 5 · Roundout — `/pentest-roundout <slug>`
+
+OWASP Top 10:2025 sweep for gaps: platform, client-side, logging, exception.
+
+- **Prereq:** inject done
+- **Tool set:**
+  - `nuclei -t http/misconfiguration/,http/exposures/` for headers, TLS, exposed panels
+  - **Software Vulnerability Scanner** / **Retire.js** (BApp, GUI, passive) for SCA — JS libs + banner CVEs
+  - TLS/cipher check via external CLI (`testssl.sh` or equivalent)
+  - `send_http1_request` for targeted header + exception triggers (HITL)
+- **Writes:** findings closing A05 / A06 / A09 gaps
+
+### 6 · Report — `/pentest-report <slug>`
+
+Assemble EN draft from per-finding markdown, hand off to Otoi-san for JP translation, prepare debrief.
+
+- **Prereq:** roundout done
+- **Tool set:** file reads + `save_finding` + `write_report`. No upstream Burp tools fire.
+- **Writes:** `reports/<slug>/report-draft-en.md`, then → Otoi-san → JP → client
+
+---
+
+### Table summary
+
+| Command | Phase | Primary tools | Prereq |
+|---------|-------|---------------|--------|
+| `/pentest-start` | 0 · Bootstrap | file writes only | — |
+| `/pentest-recon` | 1 · Recon | katana (fast + headless), Param Miner, proxy history | start |
+| `/pentest-auth` | 2 · Auth | send_http1 · repeater · intruder · Base64 (JWT) · replay_history | recon |
+| `/pentest-access` | 3 · Access | send_http1 (swapped session), repeater, Autorize (passive) | auth |
+| `/pentest-inject` | 4 · Inject | nuclei (fast + headless + auth), interactsh, diff_fuzz, Turbo Intruder | access |
+| `/pentest-roundout` | 5 · Roundout | nuclei (misconfig/exposures), Retire.js / SVS, testssl.sh | inject |
+| `/pentest-report` | 6 · Report | file reads, save_finding, write_report | roundout |
 
 Plus one utility: **`/pentest-resume <slug>`** — reads engagement state, prints the status table, suggests the next step. Use it when picking up a stale engagement.
 
