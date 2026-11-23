@@ -90,6 +90,26 @@ export BURP_MCP_REPORTS_DIR="$(pwd)/reports"   # optional; defaults to ./reports
 # ...through /pentest-report
 ```
 
+## Phase walkthrough
+
+The engagement moves left-to-right through six phases. Each is a slash command
+that reads and writes `reports/<slug>/engagement.yaml` as the single source of
+truth — so a fresh session can resume mid-engagement with `/pentest-resume <slug>`.
+
+| Command | Phase | What it does | Prereq |
+|---------|-------|--------------|--------|
+| `/pentest-start <slug> <client> <hosts>` | 0 · Bootstrap | Create `reports/<slug>/engagement.yaml`, load scope, print RoE and roadmap. No upstream tools fire. | — |
+| `/pentest-recon <slug>` | 1 · Recon | Surface map (endpoints, auth boundary, hidden params, threat model). Katana crawl + Param Miner. Passive only — no active probes. Writes `verify_queue`. | start done |
+| `/pentest-auth <slug>` | 2 · Auth | Login endpoint probes: rate-limit, user enumeration, session handling, JWT weaknesses, reset/MFA flow. HITL on every send. | recon done |
+| `/pentest-access <slug>` | 3 · Access | Horizontal IDOR (object-level), vertical priv-esc (function-level), business-logic abuse. One object at a time, no mass sweeps. | auth done |
+| `/pentest-inject <slug>` | 4 · Inject | SQLi (error + blind), reflected/stored XSS, SSRF via interactsh canary, HTTP method/content-type tamper. Drives the Nuclei scanner pass on `verify_queue`. | access done |
+| `/pentest-roundout <slug>` | 5 · Roundout | OWASP Top 10:2025 sweep for gaps: headers, TLS, SCA (JS libs), deserialization, logging, exception info disclosure. | inject done |
+| `/pentest-report <slug>` | 6 · Report | Assemble EN draft from per-finding markdown, hand off to Otoi-san for JP translation, prepare debrief. No upstream tools fire. | roundout done |
+
+Plus one utility: **`/pentest-resume <slug>`** — reads engagement state, prints the status table, suggests the next step. Use it when picking up a stale engagement.
+
+Every phase skill reprints the six-phase roadmap at five anchor moments (start, phase close, blocker, HITL ask, resume) so the harness stays oriented across long sessions.
+
 ## Prereqs
 
 - Burp Suite Community (or Pro) with the "MCP Server" BApp extension loaded
