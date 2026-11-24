@@ -13,23 +13,22 @@ Codex, Cline, Cursor, or any other MCP client.
 > not red-team post-exploitation. The HITL gate and `safety.py` enforce this
 > at the tool-call layer; the skills enforce it at the methodology layer.
 
-burp-conductor is **not just a Burp MCP wrapper**. The proxy, scanner, and
-Repeater/Intruder work is delegated to PortSwigger's official Burp MCP
-extension (streamable HTTP MCP at `http://127.0.0.1:9876/mcp`; SSE only as
-fallback), but recon, SPA crawl, template-based active scanning, OOB
-interaction, and novel-injection discovery are driven by a free stack of
-ProjectDiscovery CLIs plus an in-repo differential fuzzer, invoked under
-the same safety spine via `Bash` calls from the phase skills.
+Proxy, scanner, and Repeater/Intruder work is delegated to PortSwigger's
+official Burp MCP extension (streamable HTTP at `http://127.0.0.1:9876/mcp`;
+SSE as fallback). Recon, SPA crawl, template-based active scanning, OOB
+interaction, and novel-injection discovery run outside Burp — a stack of
+ProjectDiscovery CLIs plus an in-repo differential fuzzer, invoked via
+`Bash` from the phase skills under the same safety spine.
 
-![burp-conductor engagement](assets/architecture.svg)
+![architecture](assets/architecture.svg)
 
-Why both: the Burp MCP alone exposes 26 tools but Burp **Community** ships
-no Crawl, no Active Scanner, and no Collaborator. The free stack closes those
-gaps — Katana crawls (headless Chrome for SPAs), Nuclei scans (fast-HTTP +
-headless passes), interactsh gives us OOB canaries, `tools/diff_fuzz.py`
-stands in for Backslash-Powered Scanner. Every free-stack call is scope-checked,
-HITL-gated, and confines output to the session scratchpad — same rules as
-MCP tool calls. Full rationale and install matrix in `CLAUDE.md`.
+The free stack exists because Burp **Community** ships no Crawl, no Active
+Scanner, and no Collaborator. Katana covers crawl (headless Chrome for SPAs),
+Nuclei covers active scanning (fast-HTTP and headless passes), interactsh
+provides OOB canaries, `tools/diff_fuzz.py` stands in for Backslash-Powered
+Scanner. Every free-stack call is scope-checked, HITL-gated, and writes to
+the session scratchpad — same rules as MCP tool calls. Rationale and install
+matrix in `CLAUDE.md`.
 
 The slash-command skills under `.claude/commands/` are Claude Code-native
 (that's where the `/pentest-*` convention is best supported today), but the
