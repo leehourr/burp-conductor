@@ -168,11 +168,11 @@ OWASP Top 10:2025 sweep for gaps: platform, client-side, logging, exception.
 
 ### 6 · Report — `/pentest-report <slug>`
 
-Assemble EN draft from per-finding markdown, hand off to Otoi-san for JP translation, prepare debrief.
+Assemble the English draft from per-finding markdown, hand off for bilingual delivery, prepare debrief.
 
 - **Prereq:** roundout done
 - **Tool set:** file reads + `save_finding` + `write_report`. No upstream Burp tools fire.
-- **Writes:** `reports/<slug>/report-draft-en.md`, then → Otoi-san → JP → client
+- **Writes:** `reports/<slug>/report-draft-en.md`, then → translation → client
 
 ---
 
