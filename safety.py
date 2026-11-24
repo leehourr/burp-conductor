@@ -138,6 +138,30 @@ def check_in_scope(url: str) -> None:
         )
 
 
+def is_in_scope(url: str) -> bool:
+    """Non-raising variant of check_in_scope. Use for filtering URL lists that
+    come from untrusted sources — Location headers on redirects, scanner
+    output (katana / nuclei), extracted links. Returns False on any parse
+    failure so malformed inputs don't sneak through.
+    """
+    try:
+        check_in_scope(url)
+    except SafetyBlock:
+        return False
+    return True
+
+
+def filter_in_scope(urls: list[str]) -> tuple[list[str], list[str]]:
+    """Partition a list of URLs into (in_scope, rejected). The rejected list
+    is what a phase skill reports back to the user before firing anything.
+    """
+    ok: list[str] = []
+    bad: list[str] = []
+    for u in urls:
+        (ok if is_in_scope(u) else bad).append(u)
+    return ok, bad
+
+
 def requires_hitl(tool_name: str) -> bool:
     """(4) Tool needs *some* human gate before firing. See PER_CALL / PER_PHASE."""
     return tool_name in HITL_REQUIRED
