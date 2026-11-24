@@ -213,6 +213,48 @@ Every phase skill reprints the six-phase roadmap at five anchor moments (start, 
 Scope and identity are loaded per engagement from `engagement.yaml` via
 `/pentest-start` — not hardcoded in source.
 
+## Persistence & resume
+
+Burp **Community** has no project-save — close Burp, lose the proxy history, the
+Repeater tabs, the Scanner issues, everything. `burp-conductor` sidesteps that
+by writing engagement memory to disk as we go, so a fresh Claude Code session
+(or a fresh Burp install on a different laptop) can resume mid-engagement with
+`/pentest-resume <slug>`. Nothing lives only in Burp's RAM.
+
+Four artefacts, all under `reports/<slug>/`:
+
+| File | Writer | What it holds | Why |
+|------|--------|---------------|-----|
+| `engagement.yaml` | `start_engagement` + `advance_phase` | Scope, window, identity header, threat model, per-phase status + cursor + artifacts, `verify_queue`, `chains` | **Single source of truth.** `/pentest-resume` reads this one file and prints the two-box status table. Every phase skill reads it on entry and writes back on checkpoint. |
+| `YYYY-MM-DD-requests.jsonl` | `log_request` | Full request + response bytes (capped at 8 KB per side), scope-checked, auth-scrubbed, timestamped | Daily append-only trace of every call Claude explicitly logged. Rehydration source for `replay_history` when upstream proxy-history truncates. |
+| `YYYY-MM-DD-<sev>-<slug>.md` | `save_finding` | One markdown file per finding, fixed section order (Summary / Repro / Evidence / Impact [Technical + Business] / Remediation / References) | Findings survive the engagement independently of Burp. `/pentest-report` assembles these into the EN draft. |
+| `replay-YYYY-MM-DD.jsonl` | `checkpoint_history` → `replay_history` | Snapshot of Burp's proxy history (scope-filtered, auth-scrubbed, full raw bytes up to upstream's 5000-char per-item cap), with flags where truncation hit | Lets us re-fire a prior session's traffic on a fresh Burp install via `send_http1_request`, rewriting auth headers from a fresh login. Pro's Session Handling Rules collapse to this + `inject_auth`. |
+
+**State write cadence:** phase skills write back on three events — phase open
+(status → `in_progress`), checkpoint moments (finding filed, queue updated),
+and phase close (status → `done` with artifacts list). `advance_phase` stamps
+`checkpoint: <utc-iso>` every write, so resume always knows how stale state is.
+
+**Truncation handling.** Upstream Burp MCP caps serialized history items at
+5000 chars (hard-coded in `HistoryItemJson.kt`). When `checkpoint_history`
+hits that cap it flags the entry; at replay time `write_replay_entry` first
+tries to rehydrate from our own `log_request` JSONL (full bytes + full URL
+with scheme) before falling back to the truncated snapshot. Scheme is
+recorded as `log_url` (recovered) or `port_heuristic` (inferred from port
+443/8443/9443) so downstream knows whether to trust it.
+
+**What is NOT persisted:** Repeater tab layout, Intruder attack config,
+Scanner issue tree, Burp's own project state. We persist the *engagement*,
+not the *tool*. If you need to pick those back up, open the proxy-history
+JSONL and re-send the interesting items with `send_http1_request` under HITL.
+
+**Gitignored.** `reports/` never enters git. Engagement output — findings,
+logs, screenshots, practice-lab runs — stays on the operator's disk. The
+only thing a teammate clones is the harness itself; they recreate the tree
+with `/pentest-start`.
+
+---
+
 ## Repo layout
 
 - `server.py` — stdio MCP server; proxies to upstream Burp MCP over streamable HTTP (SSE fallback)
