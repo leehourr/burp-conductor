@@ -101,7 +101,7 @@ reports/YYYY-MM-DD-<sev>-<slug>.md  (one per finding)
 reports/report-draft-en.md
         â”‚
         â–¼
-   Otoi-san â†’ JP translation â†’ client delivery â†’ debrief
+   translation handoff â†’ client delivery â†’ debrief
 ```
 
 ---
@@ -115,7 +115,7 @@ reports/report-draft-en.md
 | `/pentest-access` | Access control â€” IDOR, privilege escalation |
 | `/pentest-inject` | Injection + SSRF + API â€” SQLi, XSS, SSRF, method tamper |
 | `/pentest-roundout` | Top 10 sweep â€” headers, SCA, crypto, design, integrity, logging, races |
-| `/pentest-report` | Evidence export, assemble EN draft, Otoi-san handoff, debrief prep |
+| `/pentest-report` | Evidence export, assemble EN draft, translation handoff, debrief prep |
 
 ### Why six phases (and what we deliberately left out)
 
@@ -195,9 +195,9 @@ Burp Community does not ship Crawl, Active Scanner, or Collaborator. We replace 
 
 | Pro feature | Free alternative | Invocation | Phase hook |
 |-------------|------------------|-----------|-----------|
-| **Crawl** (headless-browser crawler + sitemap) | **Katana** â€” `projectdiscovery/katana` | Fast pass: `katana -u https://<target> -d 5 -jc -o <scratch>/katana-<slug>.txt`<br>Deep pass (SPA / JS routes): `katana -u https://<target> -d 5 -headless -system-chrome -jc -aff -o <scratch>/katana-headless-<slug>.txt` | recon â€” output seeds `verify_queue` |
-| **Active Scanner** (fast HTTP checks) | **Nuclei** â€” `projectdiscovery/nuclei` + community templates | `nuclei -u https://<target> -severity medium,high,critical -o <scratch>/nuclei-<slug>.jsonl` | inject â€” fast CVE / misconfig / default-cred sweep |
-| **Active Scanner** (DOM / client-side) | **Nuclei headless** â€” same binary, `-headless` flag, headless-protocol templates | `nuclei -u https://<target> -headless -system-chrome -t http/exposures/,http/cves/,headless/ -severity medium,high,critical -o <scratch>/nuclei-headless-<slug>.jsonl` | inject â€” DOM-XSS, prototype pollution, client-side auth bypass |
+| **Crawl** (headless-browser crawler + sitemap) | **Katana** â€” `projectdiscovery/katana` | Fast pass: `katana -u https://<target> -d 5 -jc -cs '<in-scope-regex>' -do -o <scratch>/katana-<slug>.txt`<br>Deep pass (SPA / JS routes): `katana -u https://<target> -d 5 -headless -system-chrome -jc -aff -cs '<in-scope-regex>' -do -o <scratch>/katana-headless-<slug>.txt` | recon â€” output seeds `verify_queue` |
+| **Active Scanner** (fast HTTP checks) | **Nuclei** â€” `projectdiscovery/nuclei` + community templates | `nuclei -u https://<target> -dr -severity medium,high,critical -o <scratch>/nuclei-<slug>.jsonl` | inject â€” fast CVE / misconfig / default-cred sweep |
+| **Active Scanner** (DOM / client-side) | **Nuclei headless** â€” same binary, `-headless` flag, headless-protocol templates | `nuclei -u https://<target> -headless -system-chrome -dr -t http/exposures/,http/cves/,headless/ -severity medium,high,critical -o <scratch>/nuclei-headless-<slug>.jsonl` | inject â€” DOM-XSS, prototype pollution, client-side auth bypass |
 | **Authenticated scan** (session mgmt / login macros) | **Nuclei v3.2+ secret-file** on either pass | Add to any nuclei invocation: `-H "Authorization: Bearer <tok>"` (or `-H "Cookie: session=<v>"`) for static tokens; for login-flow replay use `-sf <scratch>/secrets.yaml` (secret-file format per Nuclei v3.2 authenticated-scans docs) paired with a login template | inject â€” gated endpoints behind login |
 | **Collaborator** (OOB interaction server) | **interactsh** â€” `projectdiscovery/interactsh` (public server `interact.sh` or self-hosted) | `interactsh-client -n 1 -o <scratch>/oast-<slug>.txt` â†’ use issued URL as SSRF/blind-XSS canary; poll output | inject â€” SSRF, blind XSS, log4shell-class |
 | **Backslash-Powered Scanner** (adaptive novel-injection discovery) | **diff_fuzz** â€” `tools/diff_fuzz.py` (in-repo). BPS source is Apache-2.0 but hooks `IScannerCheck`, which is Pro-gated, so the open-source extension cannot run in Community. This is our stand-in. | `python tools/diff_fuzz.py --url 'https://<target>/path?p=FUZZ' --baseline 3 --rl 5 --scope <host> --out <scratch>/diff-fuzz-<slug>.jsonl` | inject â€” novel SSTI / expression-language / custom-parser escapes Nuclei templates can't model |
@@ -211,9 +211,9 @@ Burp Community does not ship Crawl, Active Scanner, or Collaborator. We replace 
 
 **Rules of use (same as MCP tools):**
 
-1. **Scope check first.** Katana and Nuclei take a target list; the plugin must filter it through `safety.load_scope` before invoking. Nothing fires at out-of-scope hosts even via Bash.
+1. **Scope check first + bind scope at the CLI.** Katana and Nuclei take a target list; the plugin must filter it through `safety.load_scope` (use `safety.filter_in_scope` on URL lists that come from untrusted sources — scanner output, redirect `Location` headers, extracted links) before invoking. Nothing fires at out-of-scope hosts even via Bash. **Bind scope at the CLI too**, not just at the Python layer: Katana defaults to `-fs rdn` (root-domain) but a 302 cross-domain in a template can still leak; always pass `-cs '<in-scope-regex>' -do` on Katana (crawl-scope + display out-of-scope rather than follow it) and `-dr` on Nuclei (disable template redirects outright). Verified 2026-11-24 against `katana -h` / `nuclei -h`.
 2. **HITL per invocation.** State pass type (fast / headless / authenticated), templates enabled, severity filter, rate, and target list before firing. Headless passes are high-cost â€” call out concurrency (`-c`) and rate (`-rl`) explicitly.
-3. **Confine output to scratch.** Tool output goes to the session scratchpad (`C:\Users\lhour\AppData\Local\Temp\claude\<sess>\scratchpad\`), then the skill reads it, filters, and either seeds `verify_queue` or files findings via `save_finding`. Raw tool output does not land in `reports/`.
+3. **Confine output to scratch.** Tool output goes to the session scratchpad (`$TEMP\claude\<sess>\scratchpad\` on Windows, `/tmp/claude/<sess>/scratchpad/` on POSIX), then the skill reads it, filters, and either seeds `verify_queue` or files findings via `save_finding`. Raw tool output does not land in `reports/`.
 4. **Treat output as untrusted.** Katana and Nuclei write attacker-influenceable content (URLs from the target, response snippets, DOM-captured strings). Spotlight-wrap or JSON-parse before letting Claude act on it.
 5. **interactsh canary names go in the HITL announcement** â€” same as `GenerateCollaboratorPayload`. Never point SSRF at live internal targets without explicit per-call approval; the canary comes first.
 6. **Auth material never in argv.** When using `-H "Authorization: ..."` or `-sf auth.yaml`, write the header/flow to a scratch file first (`chmod 600` on POSIX) and reference by path. Argv is visible to other local processes.

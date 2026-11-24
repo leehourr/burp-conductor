@@ -3,7 +3,7 @@
 
 Disk is ground truth: Burp Community loses project state on close, so every
 request worth remembering gets logged here. Reports live under REPORTS_ROOT
-so Otoi-san can review without opening Burp.
+so the report reviewer can read without opening Burp.
 
 All writes go through safety.confine_report_path and strip auth headers.
 """
