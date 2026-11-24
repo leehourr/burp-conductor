@@ -50,6 +50,15 @@ Every tool call — MCP or free-stack Bash — passes through `safety.py`:
 | Auth scrub | Strips `Authorization`, `Cookie`, `Set-Cookie`, `X-API-Key`, `X-Auth-Token` from the JSONL log |
 | Identity | Injects a unique `X-Pentest-ID: <company>/<slug>/<yyyy-mm-dd>` header on every outbound call so client blue teams can filter us out of SIEM/WAF |
 
+### Scope containment — defence in depth
+
+Scope gets enforced at two layers so a redirect or scanner follow can't leak traffic across the boundary:
+
+- **Python layer — `safety.check_in_scope` / `is_in_scope` / `filter_in_scope`.** `check_in_scope` raises on the input URL before any MCP tool fires. `is_in_scope` is the non-raising predicate; `filter_in_scope(urls) -> (ok, rejected)` partitions URL lists that come from untrusted sources — scanner output, redirect `Location` headers, extracted links. verified against `tests/test_safety.py::TestScopeFilter`.
+- **CLI layer — Katana `-cs '<in-scope-regex>' -do`.** Katana defaults to `-fs rdn` (root-domain), but a 302 cross-domain in a template can still leak. `-cs` sets the crawl-scope regex, `-do` displays out-of-scope endpoints without following them. verified 2026-11-24 against `katana -h`.
+- **CLI layer — Nuclei `-dr`.** `-fr` (follow-redirects) is DEFAULT OFF per `nuclei -h`, but `-dr` (disable-redirects) makes the intent unambiguous for template-driven follows. verified 2026-11-24 against `nuclei -h`.
+- **Subdomain distinctness.** `api.target.example.com` is NOT `target.example.com` — each host must be listed explicitly in `engagement.yaml`. verified against `tests/test_safety.py::TestScope::test_subdomain_is_distinct`.
+
 ---
 
 ## Quick install
